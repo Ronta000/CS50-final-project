@@ -6,13 +6,13 @@ def register():
         confirmation = request.form.get("confirmation")
 
         if not username:
-            return apology("must provide username", 400)
+            return ("must provide username", 400)
         if not password:
-            return apology("must provide password", 400)
+            return ("must provide password", 400)
         if not confirmation:
-            return apology("must provide confirmation", 400)
+            return ("must provide confirmation", 400)
         if password != confirmation:
-            return apology("passwords don't match", 400)
+            return ("passwords don't match", 400)
 
         hash_pw = generate_password_hash(password)
 
@@ -23,7 +23,7 @@ def register():
                 hash_pw
             )
         except:
-            return apology("username already exists", 400)
+            return ("username already exists", 400)
 
         session["user_id"] = new_user
         return redirect("/")
