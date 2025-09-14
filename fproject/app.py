@@ -11,6 +11,9 @@ Session(app)
 
 # connect to database
 db = SQL("sqlite:///studybuddy.db")
+@app.route("/")
+def index():
+    return "Welcome to StudyBuddy!"
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
