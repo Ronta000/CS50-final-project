@@ -77,3 +77,16 @@ def sessions():
 
 if __name__ == '__main__':
     app.run(debug=True)
+@app.route("/dashboard")
+def dashboard():
+    return
+render_template("dashboard.html")
+@app.route("/flashcards" methods=["GET" , "POST"])
+def flashcards():
+    if request.method=="POST":
+        question =request.form["question"]
+        answer = request.form["answer"]
+    return render_template("flashcards.html")
+@app.route("/quiz")
+def quiz():
+    return render_template("quiz.html")
