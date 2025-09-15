@@ -97,3 +97,9 @@ def usersession():
 @app.route('/customizedsession')
 def customizedsessiom():
     return render_template('customizedsession.html')
+<<<<<<< Updated upstream
+=======
+@app.route('/tasks')
+def tasks():
+     return render_template('tasks.html')
+>>>>>>> Stashed changes
