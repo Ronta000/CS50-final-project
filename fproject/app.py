@@ -80,7 +80,11 @@ if __name__ == '__main__':
 @app.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
+<<<<<<< Updated upstream
 @app.route("/flashcards", methods=["GET" , "POST"])
+=======
+@app.route("/flashcards" , methods=["GET" , "POST"])
+>>>>>>> Stashed changes
 def flashcards():
     if request.method=="POST":
         question =request.form["question"]
