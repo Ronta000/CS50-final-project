@@ -52,7 +52,6 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     session.clear()
-
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
@@ -71,4 +70,9 @@ def login():
         return redirect("/")
 
     else:
-        return render_template("login.html")       
+        return render_template("login.html")  
+@app.route('/sessions')
+    def sessions():
+        return render_template('sessions.html')
+    if __name__ == '__main__':
+        app.run(debug=True)

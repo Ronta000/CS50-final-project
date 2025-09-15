@@ -1,0 +1,287 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Session</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color-scheme: light;
+    }
+    body {
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      background: #f5f5f7;
+    }
+    .card {
+      background: white;
+      padding: 20px 24px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+      width: 360px;
+      max-width: calc(100% - 32px);
+    }
+    h1 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      text-align: center;
+    }
+    .inputs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      justify-content: center;
+    }
+    input[type="number"] {
+      width: 100px;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #d0d0d5;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    button {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.primary { background: #0b63d6; color: white; }
+    button.ghost { background: #eef2ff; color: #0b63d6; border: 1px solid transparent; }
+    button.warn { background: #f3f3f3; color: #333; }
+    .display {
+      text-align: center;
+      font-size: 36px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+    label.inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="application" aria-label="Timer application">
+    <h1>TIMER</h1>
+
+    <div class="inputs">
+      <div>
+        <label for="minutes">Minutes</label><br>
+        <input id="minutes" type="number" min="0" value="0" />
+      </div>
+      <div>
+        <label for="seconds">Seconds</label><br>
+        <input id="seconds" type="number" min="0" max="59" value="30" />
+      </div>
+    </div>
+
+    <div class="display" id="display">00:30</div>
+
+    <div class="controls">
+      <button id="startBtn" class="primary">Start</button>
+      <button id="pauseBtn" class="ghost" disabled>Pause</button>
+      <button id="resetBtn" class="warn" disabled>Reset</button>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px;">
+      <label class="inline"><input id="soundToggle" type="checkbox" checked> Sound on finish</label>
+      <label class="inline"><input id="spaceToggle" type="checkbox" checked> Space to pause/resume</label>
+    </div>
+
+    <div class="footer">
+      Enter time and click Start. Use Space or Pause/Reset buttons. Ctrl/Cmd+K to reset quickly.
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const minutesInput = document.getElementById('minutes');
+      const secondsInput = document.getElementById('seconds');
+      const display = document.getElementById('display');
+      const startBtn = document.getElementById('startBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const soundToggle = document.getElementById('soundToggle');
+      const spaceToggle = document.getElementById('spaceToggle');
+
+      let totalSeconds = parseInt(secondsInput.value) + parseInt(minutesInput.value || 0) * 60;
+      let remaining = totalSeconds;
+      let intervalId = null;
+      let running = false;
+      let finished = false;
+
+      function formatTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      }
+
+      function updateDisplay() {
+        display.textContent = formatTime(remaining);
+      }
+
+      function readInputs() {
+        const m = Math.max(0, parseInt(minutesInput.value || 0));
+        let s = Math.max(0, parseInt(secondsInput.value || 0));
+        if (s > 59) s = 59;
+        totalSeconds = m * 60 + s;
+        remaining = totalSeconds;
+        updateDisplay();
+      }
+
+      function tick() {
+        if (remaining <= 0) {
+          stopInterval();
+          finished = true;
+          running = false;
+          onFinish();
+          return;
+        }
+        remaining -= 1;
+        updateDisplay();
+      }
+
+      function startInterval() {
+        if (intervalId) return;
+        intervalId = setInterval(tick, 1000);
+        running = true;
+        pauseBtn.textContent = 'Pause';
+        pauseBtn.disabled = false;
+        resetBtn.disabled = false;
+        startBtn.disabled = true;
+      }
+
+      function stopInterval() {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      }
+
+      function pauseTimer() {
+        stopInterval();
+        running = false;
+        pauseBtn.textContent = 'Resume';
+      }
+
+      function resumeTimer() {
+        if (finished) return;
+        startInterval();
+      }
+
+      function resetTimer() {
+        stopInterval();
+        readInputs();
+        running = false;
+        finished = false;
+        pauseBtn.disabled = true;
+        pauseBtn.textContent = 'Pause';
+        startBtn.disabled = false;
+        resetBtn.disabled = true;
+      }
+
+      function onFinish() {
+        display.textContent = '00:00';
+        pauseBtn.disabled = true;
+        startBtn.disabled = false;
+        if (soundToggle.checked) playBeep();
+      }
+
+      function playBeep() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.value = 880;
+          g.gain.setValueAtTime(0.0001, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+          o.connect(g);
+          g.connect(ctx.destination);
+          o.start();
+          setTimeout(() => {
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+            setTimeout(() => {
+              o.stop();
+              ctx.close();
+            }, 200);
+          }, 300);
+        } catch (e) {}
+      }
+
+      // Events
+      minutesInput.addEventListener('input', readInputs);
+      secondsInput.addEventListener('input', readInputs);
+
+      startBtn.addEventListener('click', () => {
+        if (finished) {
+          resetTimer();
+        }
+        if (remaining <= 0) readInputs();
+        if (remaining <= 0) return;
+        startInterval();
+      });
+
+      pauseBtn.addEventListener('click', () => {
+        if (!running) {
+          resumeTimer();
+        } else {
+          pauseTimer();
+        }
+      });
+
+      resetBtn.addEventListener('click', resetTimer);
+
+      window.addEventListener('keydown', (e) => {
+        if (spaceToggle.checked && e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+          e.preventDefault();
+          if (!running && !finished && (remaining > 0)) {
+            if (!intervalId) {
+              startInterval();
+            } else {
+              resumeTimer();
+            }
+          } else if (running) {
+            pauseTimer();
+          } else if (finished) {
+            resetTimer();
+          }
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          resetTimer();
+        }
+      });
+
+      readInputs();
+    })();
+  </script>
+</body>
+</html>
+{% endblock %}
