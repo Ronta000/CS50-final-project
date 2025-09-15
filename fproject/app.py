@@ -79,9 +79,8 @@ if __name__ == '__main__':
     app.run(debug=True)
 @app.route("/dashboard")
 def dashboard():
-    return
-render_template("dashboard.html")
-@app.route("/flashcards" methods=["GET" , "POST"])
+    return render_template("dashboard.html")
+@app.route("/flashcards", methods=["GET" , "POST"])
 def flashcards():
     if request.method=="POST":
         question =request.form["question"]
