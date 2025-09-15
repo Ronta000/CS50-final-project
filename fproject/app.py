@@ -90,3 +90,10 @@ def flashcards():
 @app.route("/quiz")
 def quiz():
     return render_template("quiz.html")
+
+@app.route('/usersession')
+def usersession():
+    return render_template('usersession.html')
+@app.route('/customizedsession')
+def customizedsessiom():
+    return render_template('customizedsession.html')
