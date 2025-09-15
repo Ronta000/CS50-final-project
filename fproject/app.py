@@ -81,3 +81,6 @@ if __name__ == '__main__':
 @app.route('/usersession')
 def usersession():
     return render_template('usersession.html')
+@app.route('/customizedsession')
+def customizedsessiom():
+    return render_template('customizedsession.html')
