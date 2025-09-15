@@ -77,3 +77,7 @@ def sessions():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/usersession')
+def usersession():
+    return render_template('usersession.html')
