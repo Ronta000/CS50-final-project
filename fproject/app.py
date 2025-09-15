@@ -72,7 +72,8 @@ def login():
     else:
         return render_template("login.html")  
 @app.route('/sessions')
-    def sessions():
-        return render_template('sessions.html')
-    if __name__ == '__main__':
-        app.run(debug=True)
+def sessions():
+    return render_template('sessions.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
