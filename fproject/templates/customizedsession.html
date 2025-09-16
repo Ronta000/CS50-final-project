@@ -1,11 +1,35 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Register
+    Smart Customized Session
 {% endblock %}
 
 {% block main %}
-    
+<style>
+        .card { max-width: 320px; margin: 0 auto; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .display { font-size: 24px; font-weight: 600; }
+        .list-group-item { display: flex; justify-content: space-between; align-items: center; }
+        .session-type-btn.active { background-color: #007bff; color: white; }
+        .session-type-btn { width: 120px; }
+    </style>
 
-
+<script>
+    let timeLeft = 25 * 60; 
+let timer = setInterval(() => {
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+    document.getElementById('timer').innerText = `${minutes}:${seconds}`;
+    timeLeft--;
+    if(timeLeft < 0) clearInterval(timer);
+ }, 1000);
+</script>
+<form method="POST" action="/finish_session">
+  <label>Focus (1-5):</label>
+  <input type="number" name="focus" min="1" max="5" required>
+  
+  <label>Mood (1-5):</label>
+  <input type="number" name="mood" min="1" max="5" required>
+  
+  <button type="submit">Finish Session</button>
+</form>
 {% endblock %}

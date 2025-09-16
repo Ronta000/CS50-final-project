@@ -14,7 +14,24 @@
         </div>
         <div class="mb-3">
             <input class="form-control mx-auto w-auto" name="confirmation" placeholder="Confirmation" type="password">
+             <div id="subjectsContainer">
+        <input type="text" name="subject_names[]" placeholder="Add a subject" required>
+    </div>
+    <button type="button" onclick="addSubject()">Add Another Subject</button>
+
         </div>
         <button class="btn btn-primary" type="submit">Register</button>
-    </form>
+        
+</form>
+
+<script>
+function addSubject() {
+    const container = document.getElementById("subjectsContainer");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.name = "subject_name[]";
+    input.placeholder = "Add a subject";
+    container.appendChild(input);
+}
+</script>
 {% endblock %}
