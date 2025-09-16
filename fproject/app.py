@@ -76,14 +76,12 @@ def login():
 @app.route('/sessions')
 def sessions():
     return render_template('sessions.html')
+    if __name__ == '__main__':
+        app.run(debug=True)
 
-if __name__ == '__main__':
-    app.run(debug=True)
 @app.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
-@app.route("/flashcards", methods=["GET" , "POST"])
-@app.route("/flashcards" , methods=["GET" , "POST"])
 @app.route("/flashcards", methods=["GET" , "POST"])
 def flashcards():
     if request.method=="POST":
@@ -97,6 +95,7 @@ def quiz():
 @app.route('/usersession')
 def usersession():
     return render_template('usersession.html')
+
 @app.route('/customizedsession')
 def customizedsessiom():
     return render_template('customizedsession.html')
@@ -104,3 +103,54 @@ def customizedsessiom():
 @app.route('/tasks')
 def tasks():
      return render_template('tasks.html')
+
+@app.route('/focusmood')
+def focusmood():
+    return render_template('focusmood.html')
+    try:
+        rating1 = int(request.form['rating1'])
+        rating2 = int(request.form['rating2'])
+
+        if not (1 <= rating1 <= 5 and 1 <= rating2 <= 5):
+            return render_template_string(form_html + '<p style="color: red; text-align: center;">Both ratings must be between 1 and 5.</p>')
+
+        total = rating1 + rating2
+
+        if 2 <= total <= 3:
+            return redirect('/customizedsession1')  
+        if 4 <= total <= 6:
+            return redirect('/customizedsession')
+        if 7 <= total <= 8:
+            return redirect('/customizedsession2')
+        if 9 <= total <= 10:
+            return redirect('/customizedsession3')
+
+    except ValueError:
+        return render_template_string(form_html + '<p style="color: red; text-align: center;">Please enter valid numbers.</p>')
+
+    if __name__ == '__main__':
+        app.run(debug=True)
+@app.route('/customizedsession1')
+def customizedsession1():
+    return render_template('customizedsession1.html')
+
+@app.route('/customizedsession2')
+def customizedsession2():
+    return render_template('customizedsession2.html')
+
+@app.route('/customizedsession3')
+def customizedsession3():
+    return render_template('customizedsession3.html')
+
+@app.route('/breaks')
+def breaks():
+    return render_template('breaks.html')
+@app.route('/breaks1')
+def breaks1():
+    return render_template('breaks1.html')
+@app.route('/breaks2')
+def breaks2():
+    return render_template('breaks2.html')
+@app.route('/breaks3')
+def breaks3():
+    return render_template('breaks3.html')
