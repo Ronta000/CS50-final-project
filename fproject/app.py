@@ -99,13 +99,69 @@ def usersession():
     return render_template('usersession.html')
 
 @app.route('/customizedsession')
-def customizedsessiom():
+def customizedsession():
     return render_template('customizedsession.html')
 
 @app.route('/tasks')
 def tasks():
      return render_template('tasks.html')
-@app.route('/focusmood')
+
+@app.route('/focusmood', methods=['GET', 'POST'])
 def focusmood():
-     return render_template('focusmood.html')
+    message = None
+    if request.method == 'POST':
+        try:
+            num1 = int(request.form['num1'])
+            num2 = int(request.form['num2'])
+            
+            
+            if not (1 <= num1 <= 5):
+                message = "First number must be between 1 and 5."
+            elif not (1 <= num2 <= 5):
+                message = "Second number must be between 1 and 5."
+            else:
+                total = num1 + num2
+                
+                if 2 <= total <= 3:
+                    return redirect('/customizedsession1')
+                if 4 <= total <= 6:
+                    return redirect('/customizedsession')
+                if 7 <= total <= 8:
+                    return redirect('/customizedsession2')
+                if 9 <= total <= 10:
+                    return redirect('/customizedsession3')
+                
+                else:
+                    message = f"Sum is {total}, which is not between 5 and 8."
+        except ValueError:
+            message = "Please enter valid numbers."
+    
+    return render_template('focusmood.html', message=message)
+
+    if __name__ == '__main__':
+        app.run(debug=True)
+
+@app.route('/customizedsession1')
+def customizedsession1():
+    return render_template('customizedsession1.html')
+
+@app.route('/customizedsession2')
+def customizedsession2():
+    return render_template('customizedsession2.html')
+@app.route('/customizedsession3')
+def customizedsession3():
+    return render_template('customizedsession3.html')
+@app.route('/breaks')
+def breaks():
+    return render_template('breaks.html')
+@app.route('/breaks1')
+def breaks1():
+    return render_template('breaks1.html')
+@app.route('/breaks2')
+def breaks2():
+    return render_template('breaks2.html')
+@app.route('/breaks3')
+def breaks3():
+    return render_template('breaks3.html')
+
 

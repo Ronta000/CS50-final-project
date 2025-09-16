@@ -1,22 +1,22 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Break
+    Smart Customized Session 3
 {% endblock %}
 
 {% block main %}
+
 <div class="main">
     <h1 style="color:blue">FocusHive</h1>
-    <div class="timer-circle" id="timer">01:00</div>
-    <div class="control-buttons">
+    <div class="timer-circle" id="timer">35:00</div>
+    <div class="control-buttons" id="controlButtons">
         <button onclick="togglePauseResume()">Start</button>
         <button onclick="restartTimer()">Restart</button>
     </div>
-    <div class="next-page-button" style="display: none;">
-        <button onclick="goToNextPage()">Go to Next Page</button>
+    <div class="break-button" id="breakButton" style="display: none;">
+        <button onclick="window.location.href='/breaks1'">Take a Break</button>
     </div>
 </div>
-
 <style>
 .main {
     background-color: #fff;
@@ -63,12 +63,12 @@
     transition: background-color 0.3s;
 }
 
-.next-page-button {
+.break-button {
     margin-top: 20px;
 }
 
-.next-page-button button {
-    background-color: #2ecc71;
+.break-button button {
+    background-color: #e74c3c;
     color: #fff;
     border: none;
     padding: 10px 20px;
@@ -76,18 +76,17 @@
     cursor: pointer;
 }
 
-.next-page-button button:hover {
-    background-color: #27ae60;
+.break-button button:hover {
+    background-color: #c0392b;
     transition: background-color 0.3s;
 }
 </style>
-
 <script>
 let timer;
-let minutes = 1;
+let minutes = 35;
 let seconds = 0;
 let isPaused = true;
-let enteredTime = 5; 
+let enteredTime = null;
 
 function startTimer() {
     if (timer) clearInterval(timer);
@@ -96,24 +95,23 @@ function startTimer() {
 
 function updateTimer() {
     const timerElement = document.getElementById('timer');
-    const pauseResumeButton = document.querySelector('.control-buttons button');
-    const nextPageButton = document.querySelector('.next-page-button');
-
+    const controlButtons = document.getElementById('controlButtons');
+    const breakButton = document.getElementById('breakButton');
+    
     if (isPaused) {
         timerElement.textContent = formatTime(minutes, seconds);
         return;
     }
-
+    
     if (minutes === 0 && seconds === 0) {
         clearInterval(timer);
-        timerElement.textContent = formatTime(minutes, seconds);
+        alert('Time is up! Take a break.');
         isPaused = true;
-        pauseResumeButton.textContent = 'Resume';
-        nextPageButton.style.display = 'block';
-        alert('Time is up! Go to next page');
+        controlButtons.style.display = 'none';
+        breakButton.style.display = 'block';
         return;
     }
-
+    
     if (seconds === 0) {
         if (minutes > 0) {
             minutes--;
@@ -122,7 +120,15 @@ function updateTimer() {
     } else {
         seconds--;
     }
-
+    
+    if (minutes === 0 && seconds === 0) {
+        clearInterval(timer);
+        alert('Time is up! Take a break.');
+        isPaused = true;
+        controlButtons.style.display = 'none';
+        breakButton.style.display = 'block';
+    }
+    
     timerElement.textContent = formatTime(minutes, seconds);
 }
 
@@ -131,7 +137,7 @@ function formatTime(minutes, seconds) {
 }
 
 function togglePauseResume() {
-    const pauseResumeButton = document.querySelector('.control-buttons button');
+    const pauseResumeButton = document.querySelector('#controlButtons button');
     isPaused = !isPaused;
 
     if (isPaused) {
@@ -145,20 +151,18 @@ function togglePauseResume() {
 
 function restartTimer() {
     clearInterval(timer);
-    minutes = enteredTime || 1;      
+    minutes = enteredTime || 35;
     seconds = 0;
     isPaused = false;
     const timerElement = document.getElementById('timer');
-    const pauseResumeButton = document.querySelector('.control-buttons button');
-    const nextPageButton = document.querySelector('.next-page-button');
     timerElement.textContent = formatTime(minutes, seconds);
+    const pauseResumeButton = document.querySelector('#controlButtons button');
     pauseResumeButton.textContent = 'Pause';
-    nextPageButton.style.display = 'none';
+    const controlButtons = document.getElementById('controlButtons');
+    const breakButton = document.getElementById('breakButton');
+    controlButtons.style.display = 'flex';
+    breakButton.style.display = 'none';
     startTimer();
-}
-
-function goToNextPage() {
-    window.location.href = '/focusmood';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
