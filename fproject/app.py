@@ -1,3 +1,5 @@
+
+from sqlite3 import IntegrityError
 from cs50 import SQL
 from flask import Flask, render_template, request, redirect, session
 from flask_session import Session
@@ -49,7 +51,6 @@ def register():
         return redirect("/")
     else:
         return render_template("register.html")
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     session.clear()
@@ -71,25 +72,24 @@ def login():
         return redirect("/")
 
     else:
-        return render_template("login.html") 
-
+        return render_template("login.html")  
 @app.route('/sessions')
 def sessions():
     return render_template('sessions.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
-
 @app.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
-
+@app.route("/flashcards", methods=["GET" , "POST"])
 @app.route("/flashcards" , methods=["GET" , "POST"])
+@app.route("/flashcards", methods=["GET" , "POST"])
 def flashcards():
     if request.method=="POST":
         question =request.form["question"]
         answer = request.form["answer"]
     return render_template("flashcards.html")
-
 @app.route("/quiz")
 def quiz():
     return render_template("quiz.html")
@@ -97,71 +97,10 @@ def quiz():
 @app.route('/usersession')
 def usersession():
     return render_template('usersession.html')
-
 @app.route('/customizedsession')
-def customizedsession():
+def customizedsessiom():
     return render_template('customizedsession.html')
 
 @app.route('/tasks')
 def tasks():
      return render_template('tasks.html')
-
-@app.route('/focusmood', methods=['GET', 'POST'])
-def focusmood():
-    message = None
-    if request.method == 'POST':
-        try:
-            num1 = int(request.form['num1'])
-            num2 = int(request.form['num2'])
-            
-            
-            if not (1 <= num1 <= 5):
-                message = "First number must be between 1 and 5."
-            elif not (1 <= num2 <= 5):
-                message = "Second number must be between 1 and 5."
-            else:
-                total = num1 + num2
-                
-                if 2 <= total <= 3:
-                    return redirect('/customizedsession1')
-                if 4 <= total <= 6:
-                    return redirect('/customizedsession')
-                if 7 <= total <= 8:
-                    return redirect('/customizedsession2')
-                if 9 <= total <= 10:
-                    return redirect('/customizedsession3')
-                
-                else:
-                    message = f"Sum is {total}, which is not between 5 and 8."
-        except ValueError:
-            message = "Please enter valid numbers."
-    
-    return render_template('focusmood.html', message=message)
-
-    if __name__ == '__main__':
-        app.run(debug=True)
-
-@app.route('/customizedsession1')
-def customizedsession1():
-    return render_template('customizedsession1.html')
-
-@app.route('/customizedsession2')
-def customizedsession2():
-    return render_template('customizedsession2.html')
-@app.route('/customizedsession3')
-def customizedsession3():
-    return render_template('customizedsession3.html')
-@app.route('/breaks')
-def breaks():
-    return render_template('breaks.html')
-@app.route('/breaks1')
-def breaks1():
-    return render_template('breaks1.html')
-@app.route('/breaks2')
-def breaks2():
-    return render_template('breaks2.html')
-@app.route('/breaks3')
-def breaks3():
-    return render_template('breaks3.html')
-
-
