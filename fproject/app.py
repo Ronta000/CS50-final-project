@@ -1,4 +1,3 @@
-
 from sqlite3 import IntegrityError
 from cs50 import SQL
 from flask import Flask, render_template, request, redirect, session
@@ -8,12 +7,11 @@ import time
 import datetime
 app = Flask(__name__)
 
-# configure session
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# connect to database
+
 db = SQL("sqlite:///studybuddy.db")
 @app.route("/")
 def index():
@@ -48,9 +46,12 @@ def register():
             return ("username already exists", 400)
 
         session["user_id"] = new_user
-        return redirect("/")
+        return redirect("/dashboard")
     else:
         return render_template("register.html")
+      
+    return redirect('/dashboard')
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     session.clear()
@@ -72,7 +73,8 @@ def login():
         return redirect("/")
 
     else:
-        return render_template("login.html")  
+        return render_template("login.html") 
+
 @app.route('/sessions')
 def sessions():
     return render_template('sessions.html')
@@ -104,32 +106,38 @@ def customizedsessiom():
 def tasks():
      return render_template('tasks.html')
 
-@app.route('/focusmood')
+
+@app.route('/focusmood', methods=['GET', 'POST'])
 def focusmood():
+    if request.method == 'POST':
+        try:
+            num1 = int(request.form['num1'])
+            num2 = int(request.form['num2'])
+
+            if not (1 <= num1 <= 5 and 1 <= num2 <= 5):
+                return render_template('focusmood.html', message="Both ratings must be between 1 and 5.")
+
+            total = num1 + num2
+
+            if 2 <= total <= 3:
+                return redirect('/customizedsession1')
+            elif 4 <= total <= 6:
+                return redirect('/customizedsession')
+            elif 7 <= total <= 8:
+                return redirect('/customizedsession2')
+            elif 9 <= total <= 10:
+                return redirect('/customizedsession3')
+
+        except ValueError:
+            return render_template('focusmood.html', message="Please enter valid numbers.")
+
     return render_template('focusmood.html')
-    try:
-        rating1 = int(request.form['rating1'])
-        rating2 = int(request.form['rating2'])
 
-        if not (1 <= rating1 <= 5 and 1 <= rating2 <= 5):
-            return render_template_string(form_html + '<p style="color: red; text-align: center;">Both ratings must be between 1 and 5.</p>')
 
-        total = rating1 + rating2
+if __name__ == '__main__':
+    app.run(debug=True)
 
-        if 2 <= total <= 3:
-            return redirect('/customizedsession1')  
-        if 4 <= total <= 6:
-            return redirect('/customizedsession')
-        if 7 <= total <= 8:
-            return redirect('/customizedsession2')
-        if 9 <= total <= 10:
-            return redirect('/customizedsession3')
-
-    except ValueError:
-        return render_template_string(form_html + '<p style="color: red; text-align: center;">Please enter valid numbers.</p>')
-
-    if __name__ == '__main__':
-        app.run(debug=True)
+        
 @app.route('/customizedsession1')
 def customizedsession1():
     return render_template('customizedsession1.html')

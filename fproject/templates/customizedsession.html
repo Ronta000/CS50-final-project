@@ -8,7 +8,7 @@
 
 <div class="main">
     <h1 style="color:blue">FocusHive</h1>
-    <div class="timer-circle" id="timer">25:00</div>
+    <div class="timer-circle" id="timer">01:00</div>
     <div class="control-buttons" id="controlButtons">
         <button onclick="togglePauseResume()">Start</button>
         <button onclick="restartTimer()">Restart</button>
@@ -83,7 +83,7 @@
 </style>
 <script>
 let timer;
-let minutes = 25;
+let minutes = 1;
 let seconds = 0;
 let isPaused = true;
 let enteredTime = null;
@@ -151,7 +151,7 @@ function togglePauseResume() {
 
 function restartTimer() {
     clearInterval(timer);
-    minutes = enteredTime || 25;
+    minutes = enteredTime || 1;
     seconds = 0;
     isPaused = false;
     const timerElement = document.getElementById('timer');
