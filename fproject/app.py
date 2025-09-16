@@ -25,9 +25,9 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
-        subject_names = request.form.getlist("subjects")  
+        subject_names = request.form.getlist("subject_names")  
         subject_names = [name.strip() for name in subject_names if name.strip()]
-        if len(subject_names) == 0:
+        if not subject_names:
             return ("must provide at least one subject", 400)
         if not username:
             return ("must provide username", 400)
