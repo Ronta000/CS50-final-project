@@ -154,11 +154,10 @@ function createCard(question, answer, index) {
     deleteBtn.title = "Delete this card";
 
     deleteBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // منع flip عند الضغط على الزر
+        e.stopPropagation(); 
         flashcards.splice(index, 1);
         localStorage.setItem("flashcards", JSON.stringify(flashcards));
         cardCol.remove();
-        // تحديث الأندكس لكل الكاردز
         refreshIndexes();
     });
 
@@ -173,8 +172,6 @@ function createCard(question, answer, index) {
         card.classList.toggle("flipped");
     });
 }
-
-// تحديث أندكس الكاردز بعد حذف أي واحد
 function refreshIndexes() {
     const cards = container.querySelectorAll(".flashcard");
     cards.forEach((card, i) => {
