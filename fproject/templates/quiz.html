@@ -19,19 +19,23 @@
   <div id="result"></div>
 
   <script>
+    function normalize(str) {
+      return str.trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
     function startQuiz() {
       let flashcards = JSON.parse(localStorage.getItem("flashcards")) || [];
 
-      if (flashcards.length < 10) {
-        alert("You need at least 10 flashcards to start the quiz.");
+      if (flashcards.length < 5) {
+        alert("You need at least 5 flashcards to start the quiz.");
         return;
       }
 
       // Shuffle
       flashcards = flashcards.sort(() => Math.random() - 0.5);
 
-      // اختار 10 بس
-      let questions = flashcards.slice(0, 10);
+      // Take all flashcards (or limit if too many, but as per request: use all shuffled)
+      let questions = flashcards; // Use all, shuffled
 
       let quizDiv = document.getElementById("quiz");
       quizDiv.innerHTML = "";
@@ -40,7 +44,7 @@
         quizDiv.innerHTML += `
           <div>
             <p>${index + 1}. ${q.question}</p>
-            <input type="text" id="answer${index}" placeholder="Your answer">
+        <input type="text" id="answer${index}" placeholder="Your answer">
           </div>
         `;
       });
@@ -49,25 +53,32 @@
       window.currentQuiz = questions;
 
       document.getElementById("submitBtn").style.display = "block";
+      document.getElementById("result").innerHTML = ""; // Clear previous results
     }
 
     function submitQuiz() {
       let score = 0;
       let questions = window.currentQuiz;
+      let resultHTML = `<h2>You got ${score} out of ${questions.length} correct.</h2><ul>`;
 
       questions.forEach((q, index) => {
-        let userAnswer = document.getElementById("answer" + index).value.trim().toLowerCase();
-        let correctAnswer = q.answer.trim().toLowerCase();
+        let userAnswer = normalize(document.getElementById("answer" + index).value);
+        let correctAnswer = normalize(q.answer);
 
         if (userAnswer === correctAnswer) {
           score++;
+          resultHTML += `<li>Question ${index + 1}: Correct! Your answer: "${userAnswer}"</li>`;
+        } else {
+          resultHTML += `<li>Question ${index + 1}: Wrong. Your answer: "${userAnswer}", Correct: "${correctAnswer}"</li>`;
         }
       });
 
-      document.getElementById("result").innerHTML =
-        You got ${score} out of ${questions.length} correct.;
+      resultHTML += `</ul><h2>Total Score: ${score} / ${questions.length}</h2>`;
+      document.getElementById("result").innerHTML = resultHTML;
     }
   </script>
+  <style>
+</style>
 </body>
 </html>
 {% endblock %}
