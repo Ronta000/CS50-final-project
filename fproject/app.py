@@ -1,10 +1,10 @@
-from sqlite3 import IntegrityError
 from cs50 import SQL
 from flask import Flask, render_template, request, redirect, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 import time
 import datetime
+import sqlite3
 app = Flask(__name__)
 
 app.config["SESSION_PERMANENT"] = False
@@ -138,17 +138,97 @@ if __name__ == '__main__':
     app.run(debug=True)
 
         
+@app.route('/customizedsession')
+def customizedsession():
+       if request.method == "POST":
+        data = request.get_json()
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+
+        user_id = session.get("user_id")
+
+        conn = sqlite3.connect("focushive.db", check_same_thread=False)
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, start_time, end_time, duration, datetime.now().strftime("%Y-%m-%d")))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Customized session recorded successfully!"})
+    else:
+        return render_template("customizedsession.html")
+
 @app.route('/customizedsession1')
 def customizedsession1():
-    return render_template('customizedsession1.html')
+     if request.method == "POST":
+        data = request.get_json()
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+
+        user_id = session.get("user_id")
+
+        conn = sqlite3.connect("focushive.db", check_same_thread=False)
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, start_time, end_time, duration, datetime.now().strftime("%Y-%m-%d")))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Customized session recorded successfully!"})
+    else:
+        return render_template("customizedsession1.html")
 
 @app.route('/customizedsession2')
 def customizedsession2():
-    return render_template('customizedsession2.html')
+     if request.method == "POST":
+        data = request.get_json()
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+
+        user_id = session.get("user_id")
+
+        conn = sqlite3.connect("focushive.db", check_same_thread=False)
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, start_time, end_time, duration, datetime.now().strftime("%Y-%m-%d")))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Customized session recorded successfully!"})
+    else:
+        return render_template("customizedsession2.html")
 
 @app.route('/customizedsession3')
 def customizedsession3():
-    return render_template('customizedsession3.html')
+     if request.method == "POST":
+        data = request.get_json()
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+
+        user_id = session.get("user_id")
+
+        conn = sqlite3.connect("focushive.db", check_same_thread=False)
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, start_time, end_time, duration, datetime.now().strftime("%Y-%m-%d")))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Customized session recorded successfully!"})
+    else:
+        return render_template("customizedsession3.html")
 
 @app.route('/breaks')
 def breaks():
@@ -162,3 +242,17 @@ def breaks2():
 @app.route('/breaks3')
 def breaks3():
     return render_template('breaks3.html')
+
+conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
+c = conn.cursor()
+c.execute("""
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_name TEXT,
+    start_time TEXT,
+    end_time TEXT,
+    date TEXT,
+    duration INTEGER
+)
+""")
+conn.commit()
