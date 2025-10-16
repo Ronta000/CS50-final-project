@@ -1,5 +1,5 @@
 from cs50 import SQL
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 import time
@@ -11,13 +11,30 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-
 db = SQL("sqlite:///studybuddy.db")
+db.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    hash TEXT NOT NULL
+)
+""")
+db.execute("""
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    start_time TEXT,
+    end_time TEXT,
+    duration INTEGER,
+    date TEXT
+)
+""")
+
+
 @app.route("/")
 def index():
     return render_template("register.html")
-    return "Welcome to StudyBuddy!"
-
+    
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -37,20 +54,16 @@ def register():
         hash_pw = generate_password_hash(password)
 
         try:
-            new_user = db.execute(
-                "INSERT INTO users (username, hash) VALUES (?, ?)",
-                username,
-                hash_pw
-            )
+            db.execute("INSERT INTO users (username, hash) VALUES (?, ?)", username, hash_pw)
+            user_id = db.execute("SELECT id FROM users WHERE username = ?", username)[0]["id"]
         except:
             return ("username already exists", 400)
 
-        session["user_id"] = new_user
+        session["user_id"] = user_id
         return redirect("/dashboard")
     else:
         return render_template("register.html")
       
-    return redirect('/dashboard')
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -70,7 +83,7 @@ def login():
             return ("invalid username and/or password", 400)
 
         session["user_id"] = rows[0]["id"]
-        return redirect("/")
+        return redirect("/dashboard")
 
     else:
         return render_template("login.html") 
@@ -78,8 +91,6 @@ def login():
 @app.route('/sessions')
 def sessions():
     return render_template('sessions.html')
-    if __name__ == '__main__':
-        app.run(debug=True)
 
 @app.route("/dashboard")
 def dashboard():
@@ -98,10 +109,6 @@ def quiz():
 def usersession():
     return render_template('usersession.html')
 
-@app.route('/customizedsession')
-def customizedsessiom():
-    return render_template('customizedsession.html')
-
 @app.route('/tasks')
 def tasks():
      return render_template('tasks.html')
@@ -109,7 +116,7 @@ def tasks():
 
 @app.route('/focusmood', methods=['GET', 'POST'])
 def focusmood():
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
             num1 = int(request.form['num1'])
             num2 = int(request.form['num2'])
@@ -134,72 +141,108 @@ def focusmood():
     return render_template('focusmood.html')
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
 
         
-@app.route('/customizedsession')
+@app.route('/customizedsession' ,methods=["GET", "POST"] )
 def customizedsession():
-      if request.method == "POST":
-        conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
-        c = conn.cursor()
-        c.execute("""
-            INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user_id, start_time, end_time, duration, datetime.now().strftime("%Y-%m-%d")))
-        conn.commit()
-        conn.close()
+        if request.method == "POST":
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "No data received"}), 400
 
-        return jsonify({"message": "Customized session recorded successfully!"})
-      else:
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "User not logged in"}), 401
+
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+        date = data.get("date")
+
+        db.execute(
+            "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+            user_id, start_time, end_time, duration, date
+        )
+
+        return jsonify({"message": "Session saved successfully!"}), 200
+
         return render_template("customizedsession.html")
 
-@app.route('/customizedsession1')
+@app.route('/customizedsession1' , methods=["GET", "POST"])
 def customizedsession1():
-      if request.method == "POST":
-        conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
-        c = conn.cursor()
-        c.execute("""
-            INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user_id, start_time, end_time, duration, datetime.now().strftime("%Y-%m-%d")))
-        conn.commit()
-        conn.close()
+        if request.method == "POST":
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "No data received"}), 400
 
-        return jsonify({"message": "Customized session recorded successfully!"})
-      else:
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "User not logged in"}), 401
+
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+        date = data.get("date")
+
+        db.execute(
+            "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+            user_id, start_time, end_time, duration, date
+        )
+
+        return jsonify({"message": "Session saved successfully!"}), 200
+
         return render_template("customizedsession1.html")
-@app.route('/customizedsession2')
-def customizedsession2():
-     if request.method == "POST":
-        conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
-        c = conn.cursor()
-        c.execute("""
-            INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user_id, start_time, end_time, duration, datetime.now().strftime("%Y-%m-%d")))
-        conn.commit()
-        conn.close()
 
-        return jsonify({"message": "Customized session recorded successfully!"})
-     else:
+@app.route('/customizedsession2' ,methods=["GET", "POST"] )
+def customizedsession2():
+        if request.method == "POST":
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "No data received"}), 400
+
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "User not logged in"}), 401
+
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+        date = data.get("date")
+
+        db.execute(
+            "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+            user_id, start_time, end_time, duration, date
+        )
+
+        return jsonify({"message": "Session saved successfully!"}), 200
+
         return render_template("customizedsession2.html")
 
-@app.route('/customizedsession3')
+@app.route('/customizedsession3' , methods=["GET", "POST"])
 def customizedsession3():
-      if request.method == "POST":
-        conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
-        c = conn.cursor()
-        c.execute("""
-            INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user_id, start_time, end_time, duration, datetime.now().strftime("%Y-%m-%d")))
-        conn.commit()
-        conn.close()
+        if request.method == "POST":
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "No data received"}), 400
 
-        return jsonify({"message": "Customized session recorded successfully!"})
-      else:
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "User not logged in"}), 401
+
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+        date = data.get("date")
+
+        db.execute(
+            "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+            user_id, start_time, end_time, duration, date
+        )
+
+        return jsonify({"message": "Session saved successfully!"}), 200
+
         return render_template("customizedsession3.html")
+
 @app.route('/breaks')
 def breaks():
     return render_template('breaks.html')
@@ -213,16 +256,5 @@ def breaks2():
 def breaks3():
     return render_template('breaks3.html')
 
-conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
-c = conn.cursor()
-c.execute("""
-CREATE TABLE IF NOT EXISTS sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_name TEXT,
-    start_time TEXT,
-    end_time TEXT,
-    date TEXT,
-    duration INTEGER
-)
-""")
-conn.commit()
+if __name__ == '__main__':
+    app.run(debug=True)
