@@ -141,7 +141,14 @@ if __name__ == '__main__':
 @app.route('/customizedsession')
 def customizedsession():
       if request.method == "POST":
-        conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
+        data = request.get_json()
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+
+        user_id = session.get("user_id")
+
+        conn = sqlite3.connect("focushive.db", check_same_thread=False)
         c = conn.cursor()
         c.execute("""
             INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
@@ -151,13 +158,20 @@ def customizedsession():
         conn.close()
 
         return jsonify({"message": "Customized session recorded successfully!"})
-      else:
+    else:
         return render_template("customizedsession.html")
 
 @app.route('/customizedsession1')
 def customizedsession1():
-      if request.method == "POST":
-        conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
+     if request.method == "POST":
+        data = request.get_json()
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+
+        user_id = session.get("user_id")
+
+        conn = sqlite3.connect("focushive.db", check_same_thread=False)
         c = conn.cursor()
         c.execute("""
             INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
@@ -167,12 +181,20 @@ def customizedsession1():
         conn.close()
 
         return jsonify({"message": "Customized session recorded successfully!"})
-      else:
+    else:
         return render_template("customizedsession1.html")
+
 @app.route('/customizedsession2')
 def customizedsession2():
      if request.method == "POST":
-        conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
+        data = request.get_json()
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+
+        user_id = session.get("user_id")
+
+        conn = sqlite3.connect("focushive.db", check_same_thread=False)
         c = conn.cursor()
         c.execute("""
             INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
@@ -182,13 +204,20 @@ def customizedsession2():
         conn.close()
 
         return jsonify({"message": "Customized session recorded successfully!"})
-     else:
+    else:
         return render_template("customizedsession2.html")
 
 @app.route('/customizedsession3')
 def customizedsession3():
-      if request.method == "POST":
-        conn = sqlite3.connect("studybuddy.db", check_same_thread=False)
+     if request.method == "POST":
+        data = request.get_json()
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+
+        user_id = session.get("user_id")
+
+        conn = sqlite3.connect("focushive.db", check_same_thread=False)
         c = conn.cursor()
         c.execute("""
             INSERT INTO customized_sessions (user_id, start_time, end_time, duration_minutes, session_date)
@@ -198,8 +227,9 @@ def customizedsession3():
         conn.close()
 
         return jsonify({"message": "Customized session recorded successfully!"})
-      else:
+    else:
         return render_template("customizedsession3.html")
+
 @app.route('/breaks')
 def breaks():
     return render_template('breaks.html')
