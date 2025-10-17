@@ -109,6 +109,7 @@ def flashcards():
         question =request.form["question"]
         answer = request.form["answer"]
     return render_template("flashcards.html")
+    
 @app.route("/quiz")
 def quiz():
     return render_template("quiz.html")
