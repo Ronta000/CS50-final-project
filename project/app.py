@@ -102,7 +102,29 @@ def sessions():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    conn = sqlite3.connect("studybuddy.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM sessions")
+    sessions = cur.fetchall()
+
+    sessions_count = len(sessions)
+    total_hours = sum([s["duration"] for s in sessions]) / 60 
+
+    start_date = sessions[0]["date"] if sessions else "N/A"
+    end_date = sessions[-1]["date"] if sessions else "N/A"
+
+    conn.close()
+
+    return render_template(
+        "dashboard.html",
+        start_date=start_date,
+        end_date=end_date,
+        sessions_count=sessions_count,
+        total_hours=total_hours,
+        sessions=sessions
+    )
 @app.route("/flashcards", methods=["GET" , "POST"])
 def flashcards():
     if request.method=="POST":
