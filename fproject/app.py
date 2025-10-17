@@ -92,7 +92,9 @@ def login():
 
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
+    session.clear()
     return redirect("/register")
+
 
 @app.route('/sessions')
 def sessions():
