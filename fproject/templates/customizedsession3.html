@@ -168,18 +168,5 @@ function restartTimer() {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('timer').textContent = formatTime(minutes, seconds);
 });
-fetch("/customizedsession", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    start_time: startTime,
-    end_time: endTime,
-    duration: duration,
-    date: new Date().toISOString().split("T")[0]
-  })
-})
-.then(res => res.json())
-.then(data => console.log(data))
-.catch(err => console.error(err));
 </script>
 {% endblock %}

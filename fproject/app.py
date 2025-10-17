@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 @app.route("/")
 def index():
+    if "user_id" in session:
+        return redirect("/dashboard")
     return render_template("register.html")
     
 @app.route("/register", methods=["GET", "POST"])
