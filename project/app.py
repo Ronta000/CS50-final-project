@@ -116,11 +116,16 @@ def dashboard():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM customizedsession")
+    user_id = session.get("user_id")
+    if not user_id:
+        conn.close()
+        return redirect("/register")
+
+    cur.execute("SELECT * FROM customizedsession WHERE user_id = ?", (user_id,))
     sessions = cur.fetchall()
 
     sessions_count = len(sessions)
-    total_hours = sum([s["duration"] for s in sessions]) / 60 
+    total_hours = round(sum([s["duration"] for s in sessions]) / 60, 2)
 
     start_date = sessions[0]["date"] if sessions else "N/A"
     end_date = sessions[-1]["date"] if sessions else "N/A"
@@ -197,7 +202,7 @@ def customizedsession():
         start_time = data.get("start_time")
         end_time = data.get("end_time")
         duration = data.get("duration")
-        date = data.get("date")
+        date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
 
         db.execute(
             "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
@@ -223,7 +228,7 @@ def customizedsession1():
             start_time = data.get("start_time")
             end_time = data.get("end_time")
             duration = data.get("duration")
-            date = data.get("date")
+            date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
 
             db.execute(
                 "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
@@ -249,7 +254,7 @@ def customizedsession2():
             start_time = data.get("start_time")
             end_time = data.get("end_time")
             duration = data.get("duration")
-            date = data.get("date")
+            date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
 
             db.execute(
                 "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
@@ -274,7 +279,7 @@ def customizedsession3():
             start_time = data.get("start_time")
             end_time = data.get("end_time")
             duration = data.get("duration")
-            date= data.get("date")
+            date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
 
             db.execute(
                 "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",

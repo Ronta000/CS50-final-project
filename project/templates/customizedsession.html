@@ -188,7 +188,8 @@ function togglePauseResume() {
 function endSession() {
     const end = new Date();
     const duration = Math.round(((end - sessionStart) / 1000) / 60);
-     const date = end.toISOString().split("T")[0];
+    const date = end.toISOString().split("T")[0];
+
 
     fetch("/customizedsession", {
         method: "POST",
@@ -240,5 +241,6 @@ body: JSON.stringify({
     end_time: end.toISOString(),
     duration: duration
 })
+
 </script>
 {% endblock %}
