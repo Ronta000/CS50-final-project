@@ -168,6 +168,71 @@ function restartTimer() {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('timer').textContent = formatTime(minutes, seconds);
 });
+let sessionStart = null;
 
+function togglePauseResume() {
+    const pauseResumeButton = document.querySelector('#controlButtons button');
+    isPaused = !isPaused;
+
+    if (isPaused) {
+        clearInterval(timer);
+        pauseResumeButton.textContent = 'Resume';
+    } else {
+        if (!sessionStart) sessionStart = new Date(); 
+        startTimer();
+        pauseResumeButton.textContent = 'Pause';
+    }
+}
+
+function endSession() {
+    const end = new Date();
+    const duration = Math.round(((end - sessionStart) / 1000) / 60);
+     const date = end.toISOString().split("T")[0];
+
+    fetch("/customizedsession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            start_time: sessionStart.toISOString(),
+            end_time: end.toISOString(),
+            duration: duration,
+            date: date 
+        })
+    }).then(res => res.json())
+      .then(data => console.log(data))
+      .catch(err => console.error(err));
+}
+
+function updateTimer() {
+    const timerElement = document.getElementById('timer');
+    const controlButtons = document.getElementById('controlButtons');
+    const breakButton = document.getElementById('breakButton');
+
+    if (isPaused) {
+        timerElement.textContent = formatTime(minutes, seconds);
+        return;
+    }
+
+    if (minutes === 0 && seconds === 0) {
+        clearInterval(timer);
+        alert('Time is up! Take a break.');
+        isPaused = true;
+        controlButtons.style.display = 'none';
+        breakButton.style.display = 'block';
+        endSession();
+        return;
+    }
+
+    if (seconds === 0) {
+        if (minutes > 0) {
+            minutes--;
+            seconds = 59;
+        }
+    } else {
+        seconds--;
+    }
+
+    timerElement.textContent = formatTime(minutes, seconds);
+}
 </script>
 {% endblock %}

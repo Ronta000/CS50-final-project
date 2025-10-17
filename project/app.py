@@ -106,7 +106,7 @@ def dashboard():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM sessions")
+    cur.execute("SELECT * FROM customizedsession")
     sessions = cur.fetchall()
 
     sessions_count = len(sessions)
@@ -193,8 +193,8 @@ def customizedsession():
         date = data.get("date")
 
         db.execute(
-            "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-            user_id, start_time, end_time, duration, date
+            "INSERT INTO customizedsessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+            (user_id, start_time, end_time, duration, date)
         )
         return jsonify({"message": "Session saved successfully!"}), 200
     
@@ -219,8 +219,8 @@ def customizedsession1():
             date = data.get("date")
 
             db.execute(
-                "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-                user_id, start_time, end_time, duration, date
+                "INSERT INTO customizedsessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+                (user_id, start_time, end_time, duration, date)
             )
 
             return jsonify({"message": "Session saved successfully!"}), 200
@@ -245,8 +245,8 @@ def customizedsession2():
             date = data.get("date")
 
             db.execute(
-                "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-                user_id, start_time, end_time, duration, date
+                "INSERT INTO customizedsessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+                (user_id, start_time, end_time, duration, date)
             )
 
             return jsonify({"message": "Session saved successfully!"}), 200
@@ -270,8 +270,8 @@ def customizedsession3():
             date= data.get("date")
 
             db.execute(
-                "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-                user_id, start_time, end_time, duration, date
+                 "INSERT INTO customizedsessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+            (user_id, start_time, end_time, duration, date)
             )
             return jsonify({"message": "Session saved successfully!"}), 200
        
