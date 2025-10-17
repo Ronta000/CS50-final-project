@@ -145,12 +145,14 @@ def focusmood():
         
 @app.route('/customizedsession' ,methods=["GET", "POST"] )
 def customizedsession():
-        if request.method == "POST":
-            data = request.get_json()
-            if not data:
-                return jsonify({"error": "No data received"}), 400
+    if request.method == "POST":
+        data = request.get_json()
 
+        if not data:
+            return jsonify({"error": "No data received"}), 400
+        
         user_id = session.get("user_id")
+
         if not user_id:
             return jsonify({"error": "User not logged in"}), 401
 
@@ -163,59 +165,61 @@ def customizedsession():
             "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
             user_id, start_time, end_time, duration, date
         )
-
         return jsonify({"message": "Session saved successfully!"}), 200
-
-        return render_template("customizedsession.html")
+    
+    return render_template("customizedsession.html")
 
 @app.route('/customizedsession1' , methods=["GET", "POST"])
 def customizedsession1():
         if request.method == "POST":
             data = request.get_json()
+
             if not data:
                 return jsonify({"error": "No data received"}), 400
 
-        user_id = session.get("user_id")
-        if not user_id:
-            return jsonify({"error": "User not logged in"}), 401
+            user_id = session.get("user_id")
 
-        start_time = data.get("start_time")
-        end_time = data.get("end_time")
-        duration = data.get("duration")
-        date = data.get("date")
+            if not user_id:
+                return jsonify({"error": "User not logged in"}), 401
 
-        db.execute(
-            "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-            user_id, start_time, end_time, duration, date
-        )
+            start_time = data.get("start_time")
+            end_time = data.get("end_time")
+            duration = data.get("duration")
+            date = data.get("date")
 
-        return jsonify({"message": "Session saved successfully!"}), 200
+            db.execute(
+                "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+                user_id, start_time, end_time, duration, date
+            )
 
+            return jsonify({"message": "Session saved successfully!"}), 200
+       
         return render_template("customizedsession1.html")
 
 @app.route('/customizedsession2' ,methods=["GET", "POST"] )
 def customizedsession2():
         if request.method == "POST":
             data = request.get_json()
+
             if not data:
                 return jsonify({"error": "No data received"}), 400
 
-        user_id = session.get("user_id")
-        if not user_id:
-            return jsonify({"error": "User not logged in"}), 401
+            user_id = session.get("user_id")
+            if not user_id:
+                return jsonify({"error": "User not logged in"}), 401
 
-        start_time = data.get("start_time")
-        end_time = data.get("end_time")
-        duration = data.get("duration")
-        date = data.get("date")
+            start_time = data.get("start_time")
+            end_time = data.get("end_time")
+            duration = data.get("duration")
+            date = data.get("date")
 
-        db.execute(
-            "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-            user_id, start_time, end_time, duration, date
-        )
+            db.execute(
+                "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+                user_id, start_time, end_time, duration, date
+            )
 
-        return jsonify({"message": "Session saved successfully!"}), 200
-
+            return jsonify({"message": "Session saved successfully!"}), 200
+        
         return render_template("customizedsession2.html")
 
 @app.route('/customizedsession3' , methods=["GET", "POST"])
@@ -225,24 +229,23 @@ def customizedsession3():
             if not data:
                 return jsonify({"error": "No data received"}), 400
 
-        user_id = session.get("user_id")
-        if not user_id:
-            return jsonify({"error": "User not logged in"}), 401
+            user_id = session.get("user_id")
+            if not user_id:
+                return jsonify({"error": "User not logged in"}), 401
 
-        start_time = data.get("start_time")
-        end_time = data.get("end_time")
-        duration = data.get("duration")
-        date = data.get("date")
+            start_time = data.get("start_time")
+            end_time = data.get("end_time")
+            duration = data.get("duration")
+            date= data.get("date")
 
-        db.execute(
-            "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-            user_id, start_time, end_time, duration, date
-        )
-
-        return jsonify({"message": "Session saved successfully!"}), 200
-
+            db.execute(
+                "INSERT INTO sessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+                user_id, start_time, end_time, duration, date
+            )
+            return jsonify({"message": "Session saved successfully!"}), 200
+       
         return render_template("customizedsession3.html")
-
+        
 @app.route('/breaks')
 def breaks():
     return render_template('breaks.html')
