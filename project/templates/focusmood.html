@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Focus & Feeling
+{% endblock %}
+
+{% block main %}
+    <style>
+        body {
+            background-color:white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            transition: border-color 0.3s ease;
+            margin-bottom: 1rem;
+        }
+        .form-control:focus {
+            border-color: #6c63ff;
+            outline: none;
+            box-shadow: 0 0 8px rgba(108, 99, 255, 0.3);
+        }
+        .form-control.invalid {
+            border-color: #ff4d4d;
+        }
+        .form-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .btn-modern {
+            background: linear-gradient(45deg, #6c63ff, #a29bfe);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+        }
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
+        }
+        .btn-modern:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(108, 99, 255, 0.2);
+        }
+        .btn-modern:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .error-message {
+            color: #ff4d4d;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+    </style>
+
+    <div class="form-container">
+        <h3 class="text-center mb-4">Dual Rating Form</h3>
+        {% if message %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endif %}
+        <form method="POST" id="ratingForm">
+            <div class="mb-3">
+                <label for="num1" class="form-label">Focus Rating</label>
+                <input type="number" id="num1" name="num1" class="form-control" min="1" max="5" required>
+                <div class="form-text">Please enter a number between 1 and 5.</div>
+            </div>
+            <div class="mb-3">
+                <label for="num2" class="form-label">How do you feel about the subject ?</label>
+                <input type="number" id="num2" name="num2" class="form-control" min="1" max="5" required>
+                <div class="form-text">Please enter a number between 1 and 5."5 very happy - 1 very sad"</div>
+            </div>
+            <button type="submit" class="btn-modern" id="submitButton" disabled>Submit Ratings</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('ratingForm');
+        const num1Input = document.getElementById('num1');
+        const num2Input = document.getElementById('num2');
+        const submitButton = document.getElementById('submitButton');
+
+        function validateInputs() {
+            const num1 = parseInt(num1Input.value);
+            const num2 = parseInt(num2Input.value);
+            let isValid = true;
+
+            if (num1Input.value && (num1 < 1 || num1 > 5 || !Number.isInteger(num1))) {
+                num1Input.classList.add('invalid');
+                isValid = false;
+            } else {
+                num1Input.classList.remove('invalid');
+            }
+
+            if (num2Input.value && (num2 < 1 || num2 > 5 || !Number.isInteger(num2))) {
+                num2Input.classList.add('invalid');
+                isValid = false;
+            } else {
+                num2Input.classList.remove('invalid');
+            }
+
+            submitButton.disabled = !isValid || !num1Input.value || !num2Input.value;
+        }
+
+        num1Input.addEventListener('input', validateInputs);
+        num2Input.addEventListener('input', validateInputs);
+
+        validateInputs();
+    </script>
+{% endblock %}
+

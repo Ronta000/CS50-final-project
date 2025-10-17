@@ -1,0 +1,238 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Tasks
+{% endblock %}
+
+{% block main %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To Do List</title>
+  <style>
+    body {
+      background: #f5f5f5; 
+      font-family: 'DropSerif', serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    #todo-container {
+      background: #ffffff; 
+      width: 400px;
+      margin: 80px auto 0;
+      padding: 20px;
+      color: #000000; 
+      border-radius: 15px;
+      position: relative;
+      z-index: 1;
+    }
+    #header {
+      margin: 5px;
+      font-size: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #000000; 
+    }
+    #input-box {
+      width: 200px;
+      padding: 10px;
+      border: 1px solid #cccccc; 
+      border-radius: 5px;
+      margin-right: 5px;
+      font-size: 20px;
+      background: #ffffff; 
+      color: #000000; 
+    }
+    #input-box::placeholder {
+      color: #666666; 
+    }
+    #input-button {
+      font-size: 20px;
+      cursor: pointer;
+      transition: 0.4s;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #0033cc; 
+      color: #ffffff;
+    }
+    #input-button:hover {
+      background-color: #5b7de2; 
+    }
+    .edit-btn, .delete-btn {
+      float: right;
+      color: #0033cc; 
+      cursor: pointer;
+      margin: 3px 5px;
+      border: none;
+      padding: 3px 5px;
+      background: none;
+    }
+    .edit-btn:hover, .delete-btn:hover {
+      color: #3366ff;
+    .completed {
+      text-decoration: line-through;
+      color: #666666; 
+      border: 1px solid #cccccc; 
+    }
+    h2 {
+      color: #000000; 
+    }
+    hr {
+      border-color: #cccccc; 
+    }
+    .counter-container {
+      color: #000000; 
+    }
+    #list-container {
+  list-style-position: inside; 
+  padding: 0; 
+  text-align: left; 
+  margin: 0 0 10px 0; 
+}
+
+#list-container li {
+  margin: 5px 0;
+  clear: both; 
+}
+
+#list-container label {
+  display: inline-block; 
+  margin-right: 10px; 
+}
+
+.edit-btn, .delete-btn {
+  float: right; 
+  color: #0033cc; 
+  cursor: pointer;
+  margin: 3px 5px;
+  border: none;
+  padding: 3px 5px;
+  background: none;
+}
+#list-container {
+  list-style-position: inside; 
+  padding: 0; 
+  text-align: left; 
+  margin: 0 0 10px 0; 
+}
+
+#list-container li {
+  margin: 5px 0; 
+  clear: both; 
+}
+
+#list-container label {
+  display: inline-block; 
+  margin-right: 10px; 
+}
+
+.edit-btn, .delete-btn {
+  float: right; 
+  color: #0033cc; 
+  cursor: pointer;
+  margin: 3px 5px;
+  border: none;
+  padding: 3px 5px;
+  background: none;
+}
+  </style>
+</head>
+<body>
+  <div id="todo-container">
+    <div id="header">
+      <h1>To Do List</h1>
+    </div>
+    <div id="todo-form">
+      <input
+        type="text"
+        class="input-item"
+        name="input_box"
+        id="input-box"
+        placeholder="Add Task"
+      />
+      <button id="input-button" onclick="addTask()">Add</button>
+    </div>
+    <h2>Task List</h2>
+    <ul id="list-container"></ul>
+    <hr />
+    <div class="counter-container">
+      <div id="task-counters">
+        Completed: <span id="completed-counter">0</span> | Uncompleted: <span id="uncompleted-counter">0</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const inputBox = document.getElementById("input-box");
+    const listContainer = document.getElementById("list-container");
+    const completedCounter = document.getElementById("completed-counter");
+    const uncompletedCounter = document.getElementById("uncompleted-counter");
+
+    function addTask() {
+      const task = inputBox.value.trim();
+      if (!task) {
+        alert("Please write down a task");
+        return;
+      }
+
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <label>
+          <input type="checkbox">
+          <span>${task}</span>
+        </label>
+        <span class="edit-btn">Edit</span>
+        <span class="delete-btn">Delete</span>
+      `;
+
+      const checkbox = li.querySelector("input");
+      const editBtn = li.querySelector(".edit-btn");
+      const taskSpan = li.querySelector("span");
+      const deleteBtn = li.querySelector(".delete-btn");
+
+      checkbox.addEventListener("click", function () {
+        li.classList.toggle("completed", checkbox.checked);
+        updateCounters();
+      });
+
+      editBtn.addEventListener("click", function () {
+        const update = prompt("Edit task:", taskSpan.textContent);
+        if (update !== null) {
+          taskSpan.textContent = update;
+          li.classList.remove("completed");
+          checkbox.checked = false;
+          updateCounters();
+        }
+      });
+
+      deleteBtn.addEventListener("click", function () {
+        if (confirm("Are you sure you want to delete this task?")) {
+          li.remove();
+          updateCounters();
+        }
+      });
+
+      listContainer.appendChild(li);
+      inputBox.value = "";
+      updateCounters();
+    }
+
+    function updateCounters() {
+      const completedTasks = document.querySelectorAll("#list-container li.completed").length;
+      const uncompletedTasks = document.querySelectorAll("#list-container li:not(.completed)").length;
+      completedCounter.textContent = completedTasks;
+      uncompletedCounter.textContent = uncompletedTasks;
+    }
+
+    window.onload = updateCounters;
+  </script>
+</body>
+</html>
+
+{% endblock %}
