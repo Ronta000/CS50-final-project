@@ -235,5 +235,10 @@ function updateTimer() {
 
     timerElement.textContent = formatTime(minutes, seconds);
 }
+body: JSON.stringify({
+    start_time: sessionStart.toISOString(),
+    end_time: end.toISOString(),
+    duration: duration
+})
 </script>
 {% endblock %}

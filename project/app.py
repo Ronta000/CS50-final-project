@@ -29,6 +29,16 @@ CREATE TABLE IF NOT EXISTS sessions (
     date TEXT
 )
 """)
+db.execute("""
+CREATE TABLE IF NOT EXISTS customizedsession (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    start_time TEXT,
+    end_time TEXT,
+    duration INTEGER,
+    date TEXT
+)
+""")
 
 
 @app.route("/")
@@ -171,9 +181,6 @@ def focusmood():
 
     return render_template('focusmood.html')
 
-
-
-        
 @app.route('/customizedsession' ,methods=["GET", "POST"] )
 def customizedsession():
     if request.method == "POST":
@@ -193,8 +200,8 @@ def customizedsession():
         date = data.get("date")
 
         db.execute(
-            "INSERT INTO customizedsessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-            (user_id, start_time, end_time, duration, date)
+            "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+            user_id, start_time, end_time, duration, date
         )
         return jsonify({"message": "Session saved successfully!"}), 200
     
@@ -219,8 +226,8 @@ def customizedsession1():
             date = data.get("date")
 
             db.execute(
-                "INSERT INTO customizedsessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-                (user_id, start_time, end_time, duration, date)
+                "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+                user_id, start_time, end_time, duration, date
             )
 
             return jsonify({"message": "Session saved successfully!"}), 200
@@ -245,8 +252,8 @@ def customizedsession2():
             date = data.get("date")
 
             db.execute(
-                "INSERT INTO customizedsessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-                (user_id, start_time, end_time, duration, date)
+                "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+                user_id, start_time, end_time, duration, date
             )
 
             return jsonify({"message": "Session saved successfully!"}), 200
@@ -270,9 +277,8 @@ def customizedsession3():
             date= data.get("date")
 
             db.execute(
-                 "INSERT INTO customizedsessions (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-            (user_id, start_time, end_time, duration, date)
-            )
+                "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
+                user_id, start_time, end_time, duration, date
             return jsonify({"message": "Session saved successfully!"}), 200
        
         return render_template("customizedsession3.html")
