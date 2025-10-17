@@ -89,6 +89,14 @@ let seconds = 0;
 let isPaused = true;
 let enteredTime = 5; 
 
+const savedTime = sessionStorage.getItem("breakTimer");
+if (savedTime) {
+    const { m, s, paused } = JSON.parse(savedTime);
+    minutes = m;
+    seconds = s;
+    isPaused = paused;
+}
+
 function startTimer() {
     if (timer) clearInterval(timer);
     timer = setInterval(updateTimer, 1000);
@@ -106,10 +114,12 @@ function updateTimer() {
 
     if (minutes === 0 && seconds === 0) {
         clearInterval(timer);
+        sessionStorage.removeItem("breakTimer");
         timerElement.textContent = formatTime(minutes, seconds);
         isPaused = true;
         pauseResumeButton.textContent = 'Resume';
         nextPageButton.style.display = 'block';
+        sessionStorage.removeItem("breakTimer");
         alert('Time is up! Go to next page');
         return;
     }
@@ -122,7 +132,7 @@ function updateTimer() {
     } else {
         seconds--;
     }
-
+    sessionStorage.setItem("breakTimer", JSON.stringify({ m: minutes, s: seconds, paused: isPaused }));
     timerElement.textContent = formatTime(minutes, seconds);
 }
 

@@ -87,6 +87,28 @@ let minutes = 25;
 let seconds = 0;
 let isPaused = true;
 let enteredTime = null;
+let sessionStart = null;
+
+const savedStart = sessionStorage.getItem("sessionStart");
+
+if (savedStart) {
+    sessionStart = new Date(savedStart);
+    const elapsedSeconds = Math.floor((Date.now() - sessionStart.getTime()) / 1000);
+    const totalSeconds = 15 * 60;
+    const remaining = totalSeconds - elapsedSeconds;
+
+    if (remaining > 0) {
+        minutes = Math.floor(remaining / 60);
+        seconds = remaining % 60;
+        isPaused = false;
+        startTimer();
+    } else {
+        minutes = 0;
+        seconds = 0;
+        alert('Time is up! Take a break.');
+    }
+}
+
 
 function startTimer() {
     if (timer) clearInterval(timer);
@@ -169,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('timer').textContent = formatTime(minutes, seconds);
 });
 
-let sessionStart = null;
+
 
 function togglePauseResume() {
     const pauseResumeButton = document.querySelector('#controlButtons button');
@@ -180,6 +202,7 @@ function togglePauseResume() {
         pauseResumeButton.textContent = 'Resume';
     } else {
         if (!sessionStart) sessionStart = new Date(); 
+        sessionStorage.setItem("sessionStart", sessionStart.toISOString());
         startTimer();
         pauseResumeButton.textContent = 'Pause';
     }
@@ -187,6 +210,7 @@ function togglePauseResume() {
 
 function endSession() {
     const end = new Date();
+    sessionStorage.removeItem("sessionStart");
     const duration = Math.round(((end - sessionStart) / 1000) / 60);
     const date = end.toISOString().split("T")[0];
 
