@@ -5,13 +5,7 @@
 {% endblock %}
 
 {% block main %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Quiz Mode</title>
-</head>
-<body>
+
   <h1>Quiz Mode</h1>
   <button onclick="startQuiz()">Start Quiz</button>
   <div id="quiz"></div>
@@ -57,9 +51,15 @@
     }
 
     function submitQuiz() {
+      if (!window.currentQuiz) {
+        alert("Please start the quiz first!");
+        return;
+      }
+
       let score = 0;
       let questions = window.currentQuiz;
-      let resultHTML = `<h2>You got ${score} out of ${questions.length} correct.</h2><ul>`;
+      let resultHTML = "<ul>";
+     
 
       questions.forEach((q, index) => {
         let userAnswer = normalize(document.getElementById("answer" + index).value);
@@ -79,6 +79,4 @@
   </script>
   <style>
 </style>
-</body>
-</html>
 {% endblock %}
