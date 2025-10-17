@@ -49,232 +49,183 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.min.js"></script>
     <script defer>
-        (async function () {
-            // Initialize SQLite database
-            const SQL = await initSqlJs({ locateFile: file => `https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/${file}` });
-            const db = new SQL.Database();
-            db.run(`
-                CREATE TABLE IF NOT EXISTS sessions (
-                    session_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp TEXT NOT NULL,
-                    duration INTEGER NOT NULL
-                );
-            `);
+    (async function () {
+        const minutesInput = document.getElementById('minutes');
+        const secondsInput = document.getElementById('seconds');
+        const display = document.getElementById('display');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const soundToggle = document.getElementById('soundToggle');
+        const spaceToggle = document.getElementById('spaceToggle');
+        const studyBtn = document.getElementById('studyBtn');
+        const breakBtn = document.getElementById('breakBtn');
+        const sessionList = document.getElementById('sessionList');
 
-            const minutesInput = document.getElementById('minutes');
-            const secondsInput = document.getElementById('seconds');
-            const display = document.getElementById('display');
-            const startBtn = document.getElementById('startBtn');
-            const pauseBtn = document.getElementById('pauseBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            const soundToggle = document.getElementById('soundToggle');
-            const spaceToggle = document.getElementById('spaceToggle');
-            const studyBtn = document.getElementById('studyBtn');
-            const breakBtn = document.getElementById('breakBtn');
-            const sessionList = document.getElementById('sessionList');
+        let totalSeconds = parseInt(secondsInput.value) + parseInt(minutesInput.value || 0) * 60;
+        let remaining = totalSeconds;
+        let intervalId = null;
+        let running = false;
+        let finished = false;
+        let isStudySession = true; 
 
-            let totalSeconds = parseInt(secondsInput.value) + parseInt(minutesInput.value || 0) * 60;
-            let remaining = totalSeconds;
-            let intervalId = null;
-            let running = false;
-            let finished = false;
-            let isStudySession = true; 
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
 
-            function formatTime(sec) {
-                const m = Math.floor(sec / 60);
-                const s = sec % 60;
-                return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-            }
+        function updateDisplay() { display.textContent = formatTime(remaining); }
 
-            function updateDisplay() {
-                display.textContent = formatTime(remaining);
-            }
+        function readInputs() {
+            const m = Math.max(0, parseInt(minutesInput.value || 0));
+            let s = Math.max(0, parseInt(secondsInput.value || 0));
+            if (s > 59) s = 59;
+            totalSeconds = m * 60 + s;
+            remaining = totalSeconds;
+            updateDisplay();
+        }
 
-            function readInputs() {
-                const m = Math.max(0, parseInt(minutesInput.value || 0));
-                let s = Math.max(0, parseInt(secondsInput.value || 0));
-                if (s > 59) s = 59;
-                totalSeconds = m * 60 + s;
-                remaining = totalSeconds;
-                updateDisplay();
-            }
+        function updateSessionTypeButtons() {
+            studyBtn.classList.toggle('active', isStudySession);
+            breakBtn.classList.toggle('active', !isStudySession);
+        }
 
-            function updateSessionTypeButtons() {
-                studyBtn.classList.toggle('active', isStudySession);
-                breakBtn.classList.toggle('active', !isStudySession);
-            }
-
-            function tick() {
-                if (remaining <= 0) {
-                    stopInterval();
-                    finished = true;
-                    running = false;
-                    onFinish();
-                    return;
-                }
-                remaining -= 1;
-                updateDisplay();
-            }
-
-            function startInterval() {
-                if (intervalId) return;
-                intervalId = setInterval(tick, 1000);
-                running = true;
-                pauseBtn.textContent = 'Pause';
-                pauseBtn.disabled = false;
-                resetBtn.disabled = false;
-                startBtn.disabled = true;
-            }
-
-            function stopInterval() {
-                if (intervalId) {
-                    clearInterval(intervalId);
-                    intervalId = null;
-                }
-            }
-
-            function pauseTimer() {
+        function tick() {
+            if (remaining <= 0) {
                 stopInterval();
+                finished = true;
                 running = false;
-                pauseBtn.textContent = 'Resume';
+                onFinish();
+                return;
             }
+            remaining -= 1;
+            updateDisplay();
+        }
 
-            function resumeTimer() {
-                if (finished) return;
-                startInterval();
+        function startInterval() {
+            if (intervalId) return;
+            intervalId = setInterval(tick, 1000);
+            running = true;
+            pauseBtn.textContent = 'Pause';
+            pauseBtn.disabled = false;
+            resetBtn.disabled = false;
+            startBtn.disabled = true;
+        }
+
+        function stopInterval() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
             }
+        }
 
-            function resetTimer() {
-                stopInterval();
-                readInputs();
-                running = false;
-                finished = false;
-                pauseBtn.disabled = true;
-                pauseBtn.textContent = 'Pause';
-                startBtn.disabled = false;
-                resetBtn.disabled = true;
-            }
+        function pauseTimer() {
+            stopInterval();
+            running = false;
+            pauseBtn.textContent = 'Resume';
+        }
 
-            function logSession() {
-                if (!isStudySession) return; // Only log study sessions
-                const timestamp = new Date().toISOString();
-                db.run('INSERT INTO sessions (timestamp, duration) VALUES (?, ?)', [timestamp, totalSeconds]);
-                updateSessionList();
-            }
+        function resumeTimer() {
+            if (finished) return;
+            startInterval();
+        }
 
-            function deleteSession(sessionId) {
-                db.run('DELETE FROM sessions WHERE session_id = ?', [sessionId]);
-                updateSessionList();
-            }
-
-            function updateSessionList() {
-                sessionList.innerHTML = '';
-                const result = db.exec('SELECT session_id, timestamp, duration FROM sessions ORDER BY session_id DESC');
-                if (result.length > 0) {
-                    result[0].values.forEach(row => {
-                        const [id, timestamp, duration] = row;
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item';
-                        const textSpan = document.createElement('span');
-                        textSpan.textContent = `Session ${id}: ${formatTime(duration)} on ${new Date(timestamp).toLocaleString()}`;
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'btn btn-danger btn-sm';
-                        deleteBtn.textContent = 'Delete';
-                        deleteBtn.onclick = () => deleteSession(id);
-                        li.appendChild(textSpan);
-                        li.appendChild(deleteBtn);
-                        sessionList.appendChild(li);
-                    });
-                }
-            }
-
-            function onFinish() {
-                display.textContent = '00:00';
-                pauseBtn.disabled = true;
-                startBtn.disabled = false;
-                logSession();
-                if (soundToggle.checked) playBeep();
-            }
-
-            function playBeep() {
-                try {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const o = ctx.createOscillator();
-                    const g = ctx.createGain();
-                    o.type = 'sine';
-                    o.frequency.value = 880;
-                    g.gain.setValueAtTime(0.0001, ctx.currentTime);
-                    g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
-                    o.connect(g);
-                    g.connect(ctx.destination);
-                    o.start();
-                    setTimeout(() => {
-                        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
-                        setTimeout(() => {
-                            o.stop();
-                            ctx.close();
-                        }, 200);
-                    }, 300);
-                } catch (e) {}
-            }
-
-            studyBtn.addEventListener('click', () => {
-                isStudySession = true;
-                updateSessionTypeButtons();
-            });
-
-            breakBtn.addEventListener('click', () => {
-                isStudySession = false;
-                updateSessionTypeButtons();
-            });
-
-            minutesInput.addEventListener('input', readInputs);
-            secondsInput.addEventListener('input', readInputs);
-
-            startBtn.addEventListener('click', () => {
-                if (finished) {
-                    resetTimer();
-                }
-                if (remaining <= 0) readInputs();
-                if (remaining <= 0) return;
-                startInterval();
-            });
-
-            pauseBtn.addEventListener('click', () => {
-                if (!running) {
-                    resumeTimer();
-                } else {
-                    pauseTimer();
-                }
-            });
-
-            resetBtn.addEventListener('click', resetTimer);
-
-            window.addEventListener('keydown', (e) => {
-                if (spaceToggle.checked && e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
-                    e.preventDefault();
-                    if (!running && !finished && (remaining > 0)) {
-                        if (!intervalId) {
-                            startInterval();
-                        } else {
-                            resumeTimer();
-                        }
-                    } else if (running) {
-                        pauseTimer();
-                    } else if (finished) {
-                        resetTimer();
-                    }
-                }
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-                    e.preventDefault();
-                    resetTimer();
-                }
-            });
-
+        function resetTimer() {
+            stopInterval();
             readInputs();
-            updateSessionTypeButtons();
-            updateSessionList();
-        })();
-    </script>
+            running = false;
+            finished = false;
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = 'Pause';
+            startBtn.disabled = false;
+            resetBtn.disabled = true;
+        }
 
+        async function logSession() {
+            if (!isStudySession) return; 
+
+            const start_time = new Date(Date.now() - totalSeconds * 1000).toISOString();
+            const end_time = new Date().toISOString();
+            const duration =totalSeconds;
+            const date = new Date().toISOString().split("T")[0];
+
+            try {
+                const response = await fetch("/usersession", {  
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        start_time,
+                        end_time,
+                        duration,
+                        date,
+                        session_type: "study"
+                    })
+                });
+
+                const result = await response.json();
+                console.log(result.message || result.error);
+            } catch (error) {
+                console.error("Error saving session:", error);
+            }
+        }
+
+        function onFinish() {
+            display.textContent = '00:00';
+            pauseBtn.disabled = true;
+            startBtn.disabled = false;
+            logSession();
+            if (soundToggle.checked) playBeep();
+        }
+
+        function playBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = 'sine';
+                o.frequency.value = 880;
+                g.gain.setValueAtTime(0.0001, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+                o.connect(g);
+                g.connect(ctx.destination);
+                o.start();
+                setTimeout(() => {
+                    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+                    setTimeout(() => {
+                        o.stop();
+                        ctx.close();
+                    }, 200);
+                }, 300);
+            } catch (e) {}
+        }
+
+        studyBtn.addEventListener('click', () => { isStudySession = true; updateSessionTypeButtons(); });
+        breakBtn.addEventListener('click', () => { isStudySession = false; updateSessionTypeButtons(); });
+
+        minutesInput.addEventListener('input', readInputs);
+        secondsInput.addEventListener('input', readInputs);
+        startBtn.addEventListener('click', () => { if (finished) resetTimer(); if (remaining <= 0) readInputs(); if (remaining <= 0) return; startInterval(); });
+        pauseBtn.addEventListener('click', () => { if (!running) resumeTimer(); else pauseTimer(); });
+        resetBtn.addEventListener('click', resetTimer);
+
+        window.addEventListener('keydown', (e) => {
+            if (spaceToggle.checked && e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                if (!running && !finished && (remaining > 0)) {
+                    if (!intervalId) startInterval();
+                    else resumeTimer();
+                } else if (running) pauseTimer();
+                else if (finished) resetTimer();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                resetTimer();
+            }
+        });
+
+        readInputs();
+        updateSessionTypeButtons();
+    })();
+</script>
 {% endblock %}
