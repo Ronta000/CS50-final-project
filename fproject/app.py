@@ -88,7 +88,11 @@ def login():
         return redirect("/dashboard")
 
     else:
-        return render_template("login.html") 
+        return render_template("login.html")
+
+@app.route("/logout", methods=["GET", "POST"])
+def logout():
+    return redirect("/register")
 
 @app.route('/sessions')
 def sessions():
