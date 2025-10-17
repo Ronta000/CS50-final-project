@@ -279,6 +279,7 @@ def customizedsession3():
             db.execute(
                 "INSERT INTO customizedsession (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
                 user_id, start_time, end_time, duration, date
+            )
             return jsonify({"message": "Session saved successfully!"}), 200
        
         return render_template("customizedsession3.html")
