@@ -175,11 +175,11 @@ function restartTimer() {
     clearInterval(timer);
     minutes = enteredTime || 25;
     seconds = 0;
-    isPaused = false;
+    isPaused = true;
     const timerElement = document.getElementById('timer');
     timerElement.textContent = formatTime(minutes, seconds);
     const pauseResumeButton = document.querySelector('#controlButtons button');
-    pauseResumeButton.textContent = 'Pause';
+    pauseResumeButton.textContent = 'Start';
     const controlButtons = document.getElementById('controlButtons');
     const breakButton = document.getElementById('breakButton');
     controlButtons.style.display = 'flex';

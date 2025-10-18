@@ -158,12 +158,12 @@ function restartTimer() {
     clearInterval(timer);
     minutes = enteredTime || 10;      
     seconds = 0;
-    isPaused = false;
+    isPaused = true;
     const timerElement = document.getElementById('timer');
     const pauseResumeButton = document.querySelector('.control-buttons button');
     const nextPageButton = document.querySelector('.next-page-button');
     timerElement.textContent = formatTime(minutes, seconds);
-    pauseResumeButton.textContent = 'Pause';
+    pauseResumeButton.textContent = 'Start';
     nextPageButton.style.display = 'none';
 }
 
