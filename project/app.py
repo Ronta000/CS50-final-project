@@ -202,21 +202,61 @@ def usersession():
 
     return render_template('usersession.html')
 
-@app.route('/tasks')
+@app.route("/tasks", methods=["GET", "POST"])
 def tasks():
     user_id = session.get("user_id")
     if not user_id:
         return redirect("/register")
 
+    conn = sqlite3.connect("studybuddy.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    
+    seven_days_ago = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+    cur.execute("DELETE FROM tasks WHERE user_id = ? AND date(date_created) < ?", (user_id, seven_days_ago))
+    conn.commit()
+
     if request.method == "POST":
-        task = request.form.get("task")
+        task = request.form.get("tasks")
         if task:
-            db.execute("INSERT INTO tasks (user_id, task) VALUES (?, ?)", user_id, task)
+            cur.execute("INSERT INTO tasks (user_id, task) VALUES (?, ?)", (user_id, task))
+            conn.commit()
+        conn.close()
         return redirect("/tasks")
 
-    tasks = db.execute("SELECT * FROM tasks WHERE user_id = ? ORDER BY date_created DESC", user_id)
-    
-    return render_template('tasks.html')
+    cur.execute("SELECT id, task, completed FROM tasks WHERE user_id = ? ORDER BY date_created DESC", (user_id,))
+    tasks = cur.fetchall()
+    conn.close()
+
+    return render_template("tasks.html", tasks=tasks)
+
+@app.route("/update_task/<int:task_id>", methods=["POST"])
+def update_task(task_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/register")
+
+    conn = sqlite3.connect("studybuddy.db")
+    cur = conn.cursor()
+    cur.execute("UPDATE tasks SET completed = NOT completed WHERE id = ? AND user_id = ?", (task_id, user_id))
+    conn.commit()
+    conn.close()
+    return redirect("/tasks")
+
+
+@app.route("/delete_task/<int:task_id>", methods=["POST"])
+def delete_task(task_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/register")
+
+    conn = sqlite3.connect("studybuddy.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
+    conn.commit()
+    conn.close()
+    return redirect("/tasks")
 
 @app.route('/focusmood', methods=['GET', 'POST'])
 def focusmood():

@@ -123,19 +123,31 @@ h2 {
     <div id="header">
       <h1>To Do List</h1>
     </div>
-    <div id="todo-form">
-      <input
-        type="text"
-        class="input-item"
-        name="input_box"
-        id="input-box"
-        placeholder="Add Task"
-      />
-      <button id="input-button" onclick="addTask()">Add</button>
-    </div>
+   <form action="/tasks" method="POST" id="todo-form">
+  <input 
+    type="text" 
+    name="tasks" 
+    id="input-box" 
+    placeholder="Add Task" 
+    required 
+  />
+  <button type="submit" id="input-button">Add</button>
+</form>
     <h2>Task List</h2>
-    <ul id="list-container"></ul>
-    
+<ul id="list-container">
+  {% for t in tasks %}
+    <li class="{{ 'completed' if t['completed'] else '' }}">
+      <form action="/update_task/{{ t['id'] }}" method="POST" style="display:inline;">
+        <input type="checkbox" onchange="this.form.submit()" {% if t['completed'] %}checked{% endif %}>
+      </form>
+      <span>{{ t['task'] }}</span>
+      <form action="/delete_task/{{ t['id'] }}" method="POST" style="display:inline;">
+        <button type="submit" class="delete-btn">Delete</button>
+      </form>
+    </li>
+  {% endfor %}
+</ul>
+
     <div class="counter-container">
       <div id="task-counters">
         Completed: <span id="completed-counter">0</span> | Uncompleted: <span id="uncompleted-counter">0</span>
@@ -206,5 +218,15 @@ h2 {
     }
 
     window.onload = updateCounters;
+    function addTask() {
+      const task = inputBox.value.trim();
+      if (!task) return alert("Please write a task");
+
+  fetch("/tasks", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ task })
+  }).then(() => location.reload());
+}
   </script>
 {% endblock %}
