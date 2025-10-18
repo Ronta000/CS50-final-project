@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Log In
+    Login
 {% endblock %}
 
 {% block main %}
@@ -12,6 +12,11 @@
         <div class="mb-3">
             <input class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password">
         </div>
-        <button class="btn btn-primary" type="submit">Log In</button>
+
+        <p class="text-center">
+            Don’t have an account? <a href="/register">Register</a>
+        </p>
+
+        <button class="btn btn-primary d-block mx-auto" type="submit">Login</button>
     </form>
 {% endblock %}
