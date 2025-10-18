@@ -5,145 +5,120 @@
 {% endblock %}
 
 {% block main %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>To Do List</title>
   <style>
-    body {
-      background: #f5f5f5; 
-      font-family: 'DropSerif', serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    #todo-container {
-      background: #ffffff; 
-      width: 400px;
-      margin: 80px auto 0;
-      padding: 20px;
-      color: #000000; 
-      border-radius: 15px;
-      position: relative;
-      z-index: 1;
-    }
-    #header {
-      margin: 5px;
-      font-size: 20px;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 20px;
-      color: #000000; 
-    }
-    #input-box {
-      width: 200px;
-      padding: 10px;
-      border: 1px solid #cccccc; 
-      border-radius: 5px;
-      margin-right: 5px;
-      font-size: 20px;
-      background: #ffffff; 
-      color: #000000; 
-    }
-    #input-box::placeholder {
-      color: #666666; 
-    }
-    #input-button {
-      font-size: 20px;
-      cursor: pointer;
-      transition: 0.4s;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      background-color: #0033cc; 
-      color: #ffffff;
-    }
-    #input-button:hover {
-      background-color: #5b7de2; 
-    }
-    .edit-btn, .delete-btn {
-      float: right;
-      color: #0033cc; 
-      cursor: pointer;
-      margin: 3px 5px;
-      border: none;
-      padding: 3px 5px;
-      background: none;
-    }
-    .edit-btn:hover, .delete-btn:hover {
-      color: #3366ff;
-    .completed {
-      text-decoration: line-through;
-      color: #666666; 
-      border: 1px solid #cccccc; 
-    }
-    h2 {
-      color: #000000; 
-    }
-    hr {
-      border-color: #cccccc; 
-    }
-    .counter-container {
-      color: #000000; 
-    }
-    #list-container {
-  list-style-position: inside; 
-  padding: 0; 
-  text-align: left; 
-  margin: 0 0 10px 0; 
+  body {
+  background: #f5f5f5;
+  font-family: 'DropSerif', serif;
+  margin: 0;
+  padding: 0;
 }
 
-#list-container li {
-  margin: 5px 0;
-  clear: both; 
+#todo-container {
+  background: #ffffff;
+  width: 400px;
+  margin: 80px auto;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-#list-container label {
-  display: inline-block; 
-  margin-right: 10px; 
+h1 {
+  text-align: center;
+  color: #000;
+  margin-bottom: 20px;
 }
 
-.edit-btn, .delete-btn {
-  float: right; 
-  color: #0033cc; 
-  cursor: pointer;
-  margin: 3px 5px;
+#todo-form {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+
+#input-box {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+#input-button {
+  background-color: #0033cc;
+  color: #fff;
   border: none;
-  padding: 3px 5px;
-  background: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.3s;
 }
+#input-button:hover {
+  background-color: #0044ff;
+}
+
+h2 {
+  color: #000;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
 #list-container {
-  list-style-position: inside; 
-  padding: 0; 
-  text-align: left; 
-  margin: 0 0 10px 0; 
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 #list-container li {
-  margin: 5px 0; 
-  clear: both; 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9f9f9;
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+#list-container li:hover {
+  background: #f1f1ff;
 }
 
 #list-container label {
-  display: inline-block; 
-  margin-right: 10px; 
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  cursor: pointer;
+}
+
+#list-container li.completed span {
+  text-decoration: line-through;
+  color: #777;
 }
 
 .edit-btn, .delete-btn {
-  float: right; 
-  color: #0033cc; 
-  cursor: pointer;
-  margin: 3px 5px;
-  border: none;
-  padding: 3px 5px;
   background: none;
+  border: none;
+  color: #0033cc;
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 14px;
+  transition: 0.2s;
+}
+.edit-btn:hover, .delete-btn:hover {
+  color: #0055ff;
+}
+
+.counter-container {
+  margin-top: 15px;
+  text-align: center;
+  color: #333;
+  font-weight: 500;
 }
   </style>
-</head>
-<body>
+
   <div id="todo-container">
     <div id="header">
       <h1>To Do List</h1>
@@ -160,7 +135,7 @@
     </div>
     <h2>Task List</h2>
     <ul id="list-container"></ul>
-    <hr />
+    
     <div class="counter-container">
       <div id="task-counters">
         Completed: <span id="completed-counter">0</span> | Uncompleted: <span id="uncompleted-counter">0</span>
@@ -232,7 +207,4 @@
 
     window.onload = updateCounters;
   </script>
-</body>
-</html>
-
 {% endblock %}

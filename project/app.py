@@ -39,6 +39,15 @@ CREATE TABLE IF NOT EXISTS customizedsessiondb (
     date TEXT
 )
 """)
+db.execute("""
+CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    task TEXT NOT NULL,
+    completed INTEGER DEFAULT 0,
+    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
 
 
 @app.route("/")
@@ -121,7 +130,12 @@ def dashboard():
         conn.close()
         return redirect("/register")
 
-    cur.execute("SELECT * FROM customizedsessiondb WHERE user_id = ?", (user_id,))
+    seven_days_ago = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+
+    cur.execute("DELETE FROM customizedsessiondb WHERE user_id = ? AND date < ?", (user_id, seven_days_ago))
+    conn.commit()
+
+    cur.execute("SELECT * FROM customizedsessiondb WHERE user_id = ? AND date >= ?", (user_id, seven_days_ago))
     sessions = cur.fetchall()
 
     sessions_count = len(sessions)
@@ -130,10 +144,14 @@ def dashboard():
     start_date = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
     end_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
-    start_date = sessions[0]["date"] if sessions else "N/A"
-    end_date = sessions[-1]["date"] if sessions else "N/A"
-
-    conn.close()
+    if sessions:
+        first_session_date = datetime.datetime.strptime(sessions[0]["date"], "%Y-%m-%d")
+        start_date = first_session_date.strftime("%Y-%m-%d")
+        end_date = (first_session_date + datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+    else:
+        start_date = "N/A"
+        end_date = "N/A"
+        conn.close()
 
     return render_template(
         "dashboard.html",
@@ -186,8 +204,19 @@ def usersession():
 
 @app.route('/tasks')
 def tasks():
-     return render_template('tasks.html')
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/register")
 
+    if request.method == "POST":
+        task = request.form.get("task")
+        if task:
+            db.execute("INSERT INTO tasks (user_id, task) VALUES (?, ?)", user_id, task)
+        return redirect("/tasks")
+
+    tasks = db.execute("SELECT * FROM tasks WHERE user_id = ? ORDER BY date_created DESC", user_id)
+    
+    return render_template('tasks.html')
 
 @app.route('/focusmood', methods=['GET', 'POST'])
 def focusmood():

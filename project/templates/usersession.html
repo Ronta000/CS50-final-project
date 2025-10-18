@@ -41,11 +41,7 @@
             <label class="form-check-label"><input id="spaceToggle" type="checkbox" checked class="form-check-input me-1"> Space</label>
         </div>
 
-        <div class="mt-3">
-            <h3>Completed Sessions</h3>
-            <ul id="sessionList" class="list-group"></ul>
-        </div>
-    </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.min.js"></script>
     <script defer>
@@ -90,6 +86,11 @@
             studyBtn.classList.toggle('active', isStudySession);
             breakBtn.classList.toggle('active', !isStudySession);
         }
+        function toggleInputs(disabled) {
+            minutesInput.disabled = disabled;
+            secondsInput.disabled = disabled;
+        }
+
 
         function tick() {
             if (remaining <= 0) {
@@ -107,6 +108,7 @@
             if (intervalId) return;
             intervalId = setInterval(tick, 1000);
             running = true;
+            toggleInputs(true);
             pauseBtn.textContent = 'Pause';
             pauseBtn.disabled = false;
             resetBtn.disabled = false;
@@ -123,6 +125,7 @@
         function pauseTimer() {
             stopInterval();
             running = false;
+            toggleInputs(false);
             pauseBtn.textContent = 'Resume';
         }
 
@@ -136,6 +139,7 @@
             readInputs();
             running = false;
             finished = false;
+            toggleInputs(false);
             pauseBtn.disabled = true;
             pauseBtn.textContent = 'Pause';
             startBtn.disabled = false;
@@ -175,6 +179,7 @@
             pauseBtn.disabled = true;
             startBtn.disabled = false;
             logSession();
+            toggleInputs(false);
             if (soundToggle.checked) playBeep();
         }
 
