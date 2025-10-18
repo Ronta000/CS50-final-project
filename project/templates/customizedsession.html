@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Smart Customized Session
+    Smartly Customized Session
 {% endblock %}
 
 {% block main %}
@@ -228,17 +228,29 @@ function endSession() {
       .catch(err => console.error(err));
 }
 
+let lastUpdate = Date.now();
+
 function updateTimer() {
     const timerElement = document.getElementById('timer');
     const controlButtons = document.getElementById('controlButtons');
     const breakButton = document.getElementById('breakButton');
 
     if (isPaused) {
+        lastUpdate = Date.now();
         timerElement.textContent = formatTime(minutes, seconds);
         return;
     }
 
-    if (minutes === 0 && seconds === 0) {
+    const now = Date.now();
+    const delta = Math.floor((now - lastUpdate) / 1000); 
+    if (delta > 0) {
+        const totalSeconds = minutes * 60 + seconds - delta;
+        minutes = Math.floor(totalSeconds / 60);
+        seconds = totalSeconds % 60;
+        lastUpdate = now;
+    }
+
+    if (minutes <= 0 && seconds <= 0) {
         clearInterval(timer);
         alert('Time is up! Take a break.');
         isPaused = true;
@@ -248,16 +260,7 @@ function updateTimer() {
         return;
     }
 
-    if (seconds === 0) {
-        if (minutes > 0) {
-            minutes--;
-            seconds = 59;
-        }
-    } else {
-        seconds--;
-    }
-
-    timerElement.textContent = formatTime(minutes, seconds);
+    timerElement.textContent = formatTime(Math.max(minutes, 0), Math.max(seconds, 0));
 }
 body: JSON.stringify({
     start_time: sessionStart.toISOString(),

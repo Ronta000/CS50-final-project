@@ -102,38 +102,39 @@ function startTimer() {
     timer = setInterval(updateTimer, 1000);
 }
 
+let lastUpdate = Date.now();
+
 function updateTimer() {
     const timerElement = document.getElementById('timer');
-    const pauseResumeButton = document.querySelector('.control-buttons button');
-    const nextPageButton = document.querySelector('.next-page-button');
+    const controlButtons = document.getElementById('controlButtons');
+    const breakButton = document.getElementById('breakButton');
 
     if (isPaused) {
+        lastUpdate = Date.now();
         timerElement.textContent = formatTime(minutes, seconds);
         return;
     }
 
-    if (minutes === 0 && seconds === 0) {
+    const now = Date.now();
+    const delta = Math.floor((now - lastUpdate) / 1000); 
+    if (delta > 0) {
+        const totalSeconds = minutes * 60 + seconds - delta;
+        minutes = Math.floor(totalSeconds / 60);
+        seconds = totalSeconds % 60;
+        lastUpdate = now;
+    }
+
+    if (minutes <= 0 && seconds <= 0) {
         clearInterval(timer);
-        sessionStorage.removeItem("breakTimer");
-        timerElement.textContent = formatTime(minutes, seconds);
+        alert('Time is up! Go to next page.');
         isPaused = true;
-        pauseResumeButton.textContent = 'Resume';
-        nextPageButton.style.display = 'block';
-        sessionStorage.removeItem("breakTimer");
-        alert('Time is up! Go to next page');
+        controlButtons.style.display = 'none';
+        breakButton.style.display = 'block';
+        endSession();
         return;
     }
 
-    if (seconds === 0) {
-        if (minutes > 0) {
-            minutes--;
-            seconds = 59;
-        }
-    } else {
-        seconds--;
-    }
-    sessionStorage.setItem("breakTimer", JSON.stringify({ m: minutes, s: seconds, paused: isPaused }));
-    timerElement.textContent = formatTime(minutes, seconds);
+    timerElement.textContent = formatTime(Math.max(minutes, 0), Math.max(seconds, 0));
 }
 
 function formatTime(minutes, seconds) {
