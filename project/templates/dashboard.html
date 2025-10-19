@@ -9,7 +9,6 @@
     <h1 class="display-5 fw-bold text-center mb-4"> Your Weekly Dashboard</h1>
     <p class="text-center text-muted mb-4">From {{ start_date }} to {{ end_date }}</p>
 
-    <!-- Stats Cards -->
     <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
         <div class="col">
             <div class="card h-100">
@@ -30,7 +29,6 @@
     </div>
 
     {% if sessions %}
-    <!-- Sessions Table -->
     <div class="card mb-4">
         <div class="card-body">
             <h2 class="card-title text-center mb-3">Your Sessions</h2>
@@ -50,7 +48,8 @@
                             <td>{{ s.date }}</td>
                             <td>{{ s.start_time }}</td>
                             <td>{{ s.end_time }}</td>
-                            <td>{{ s.duration }}</td>
+                            <td>{{ s.display_duration }}</td>
+
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -59,7 +58,6 @@
         </div>
     </div>
     {% else %}
-    <!-- Empty State - Engaging Content -->
     <div class="card mb-4">
         <div class="card-body text-center">
             <h2 class="card-title text-warning">No Study Sessions Yet 😅</h2>
@@ -68,7 +66,6 @@
         </div>
     </div>
     {% endif %}
-    <!-- Suggestion Cards -->
     <div class="row row-cols-1 row-cols-md-2 g-4">
         <div class="col">
             <div class="card h-100">

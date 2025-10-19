@@ -148,8 +148,12 @@ def dashboard():
     sessions = cur.fetchall()
 
     sessions_count = len(sessions)
-    total_hours = round(sum([s["duration"] for s in sessions]) / 60, 2)
-    
+    total_hours = round(sum([s["duration"] for s in sessions]) / 3600, 2)
+    sessions = [dict(s) for s in sessions]
+    for s in sessions:
+        s["display_duration"] = round(s["duration"] / 60, 2)
+
+
     start_date = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
     end_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
@@ -170,24 +174,71 @@ def dashboard():
         total_hours=total_hours,
         sessions=sessions
     )
-@app.route("/flashcards", methods=["GET" , "POST"])
+
+@app.route("/flashcards", methods=["GET", "POST"])
 def flashcards():
-    user_id = session.get("user_id")
-    if not user_id:
-        return redirect("/login")
+    user_id = session["user_id"]
+    conn = sqlite3.connect("studybuddy.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
 
     if request.method == "POST":
         question = request.form.get("question")
         answer = request.form.get("answer")
 
         if question and answer:
-            db.execute("INSERT INTO flashcards (user_id, question, answer) VALUES (?, ?, ?)",
-                       user_id, question, answer)
+            cur.execute(
+                "INSERT INTO flashcards (user_id, question, answer) VALUES (?, ?, ?)",
+                (user_id, question, answer)
+            )
+            conn.commit()
 
-    cards = db.execute("SELECT * FROM flashcards WHERE user_id = ?", user_id)
+    
+    cur.execute("SELECT * FROM flashcards WHERE user_id = ?", (user_id,))
+    cards = cur.fetchall()
+    conn.close()
 
     return render_template("flashcards.html", cards=cards)
-    
+
+
+@app.route("/flashcards_data")
+def flashcards_data():
+    user_id = session["user_id"]
+    conn = sqlite3.connect("studybuddy.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM flashcards WHERE user_id = ?", (user_id,))
+    cards = [dict(row) for row in cur.fetchall()]
+    conn.close()
+    return jsonify(cards)
+
+@app.route("/add_flashcard", methods=["POST"])
+def add_flashcard():
+    user_id = session["user_id"]
+    data = request.get_json()
+    question = data.get("question")
+    answer = data.get("answer")
+
+    conn = sqlite3.connect("studybuddy.db")
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO flashcards (user_id, question, answer) VALUES (?, ?, ?)",
+        (user_id, question, answer)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route("/delete_flashcard/<int:id>", methods=["DELETE"])
+def delete_flashcard(id):
+    user_id = session["user_id"]
+    conn = sqlite3.connect("studybuddy.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM flashcards WHERE id = ? AND user_id = ?", (id, user_id))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
 @app.route("/quiz")
 def quiz():
     return render_template("quiz.html")

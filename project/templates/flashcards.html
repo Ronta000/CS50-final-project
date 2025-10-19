@@ -101,80 +101,58 @@
         </form>
         <div id="flashcards-container" class="row g-3"></div>
     </div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    loadFlashcards();
 
-    <script>
-        const container = document.getElementById("flashcards-container");
 
-        // Load flashcards from localStorage
-        let flashcards = JSON.parse(localStorage.getItem("flashcards")) || [];
-        flashcards.forEach((f, index) => createCard(f.question, f.answer, index));
+    document.getElementById("flashcard-form").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const question = document.getElementById("question").value;
+        const answer = document.getElementById("answer").value;
 
         
-        document.getElementById("flashcard-form").addEventListener("submit", function (e) {
-            e.preventDefault();
-            const question = document.getElementById("question").value;
-            const answer = document.getElementById("answer").value;
-            flashcards.push({ question, answer });
-            localStorage.setItem("flashcards", JSON.stringify(flashcards));
-            createCard(question, answer, flashcards.length - 1);
-            document.getElementById("question").value = "";
-            document.getElementById("answer").value = "";
+        const response = await fetch("/add_flashcard", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ question, answer })
         });
 
-        function createCard(question, answer, index) {
-            const cardCol = document.createElement("div");
-            cardCol.classList.add("col-md-4");
-
-            const card = document.createElement("div");
-            card.classList.add("flashcard");
-
-            const cardInner = document.createElement("div");
-            cardInner.classList.add("flashcard-inner");
-
-            const cardFront = document.createElement("div");
-            cardFront.classList.add("flashcard-front");
-            cardFront.innerText = question;
-
-            const cardBack = document.createElement("div");
-            cardBack.classList.add("flashcard-back");
-            cardBack.innerText = answer;
-
-            const deleteBtn = document.createElement("button");
-            deleteBtn.classList.add("delete-btn");
-            deleteBtn.innerText = "×";
-            deleteBtn.title = "Delete this card";
-            deleteBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                flashcards.splice(index, 1);
-                localStorage.setItem("flashcards", JSON.stringify(flashcards));
-                cardCol.remove();
-                refreshIndexes();
-            });
-
-            cardInner.appendChild(cardFront);
-            cardInner.appendChild(cardBack);
-            card.appendChild(cardInner);
-            card.appendChild(deleteBtn);
-            cardCol.appendChild(card);
-            container.appendChild(cardCol);
-
-            card.addEventListener("click", () => {
-                card.classList.toggle("flipped");
-            });
+        const result = await response.json();
+        if (result.success) {
+            document.getElementById("question").value = "";
+            document.getElementById("answer").value = "";
+            loadFlashcards(); 
         }
+    });
+});
+async function loadFlashcards() {
+    const container = document.getElementById("flashcards-container");
+    container.innerHTML = "";
 
-        function refreshIndexes() {
-            const cards = container.querySelectorAll(".flashcard");
-            cards.forEach((card, i) => {
-                const btn = card.querySelector(".delete-btn");
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    flashcards.splice(i, 1);
-                    localStorage.setItem("flashcards", JSON.stringify(flashcards));
-                    card.remove();
-                    refreshIndexes();
-                };
-            });
-        }
-    </script>
+    const response = await fetch("/flashcards_data");
+    const cards = await response.json();
+
+    cards.forEach(card => {
+        const cardDiv = document.createElement("div");
+        cardDiv.classList.add("col-md-4");
+        cardDiv.innerHTML = `
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+                <div class="flashcard-inner">
+                    <div class="flashcard-front">${card.question}</div>
+                    <div class="flashcard-back">${card.answer}</div>
+                </div>
+                <button class="delete-btn" onclick="deleteFlashcard(${card.id}, event)">×</button>
+            </div>
+        `;
+        container.appendChild(cardDiv);
+    });
+}
+async function deleteFlashcard(id, event) {
+    event.stopPropagation(); // علشان مايتقلبش الكارت لما نضغط حذف
+    await fetch(`/delete_flashcard/${id}`, { method: "DELETE" });
+    loadFlashcards();
+}
+</script>
+
 {% endblock %}
