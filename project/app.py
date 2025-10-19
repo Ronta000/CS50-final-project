@@ -48,6 +48,15 @@ CREATE TABLE IF NOT EXISTS tasks (
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 """)
+db.execute("""
+CREATE TABLE IF NOT EXISTS flashcards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+)
+""")
 
 
 @app.route("/")
@@ -163,10 +172,21 @@ def dashboard():
     )
 @app.route("/flashcards", methods=["GET" , "POST"])
 def flashcards():
-    if request.method=="POST":
-        question =request.form["question"]
-        answer = request.form["answer"]
-    return render_template("flashcards.html")
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/login")
+
+    if request.method == "POST":
+        question = request.form.get("question")
+        answer = request.form.get("answer")
+
+        if question and answer:
+            db.execute("INSERT INTO flashcards (user_id, question, answer) VALUES (?, ?, ?)",
+                       user_id, question, answer)
+
+    cards = db.execute("SELECT * FROM flashcards WHERE user_id = ?", user_id)
+
+    return render_template("flashcards.html", cards=cards)
     
 @app.route("/quiz")
 def quiz():
