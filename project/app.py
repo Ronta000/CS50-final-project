@@ -148,18 +148,8 @@ def dashboard():
     sessions = cur.fetchall()
 
     sessions_count = len(sessions)
-    if sessions_count == 0:
-        total_hours = 0
-    else:
-        total_minutes = sum(float(s["duration"]) for s in sessions)
-        total_hours = round(total_minutes / 60.0, 2)
-
-    sessions = [dict(s) for s in sessions]
-    for s in sessions:
-        s["display_duration"] = round(float(s["duration"]), 2)
-
-
-
+    total_minutes = sum([s["duration"] for s in sessions])
+    
     start_date = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
     end_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
@@ -177,7 +167,7 @@ def dashboard():
         start_date=start_date,
         end_date=end_date,
         sessions_count=sessions_count,
-        total_hours=total_hours,
+        total_minutes=total_minutes,
         sessions=sessions
     )
 
