@@ -133,26 +133,33 @@ def dashboard():
     conn = sqlite3.connect("studybuddy.db")
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
-
     user_id = session.get("user_id")
+    
     if not user_id:
         conn.close()
         return redirect("/register")
-
+    
     seven_days_ago = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
-
+    
     cur.execute("DELETE FROM customizedsessiondb WHERE user_id = ? AND date < ?", (user_id, seven_days_ago))
     conn.commit()
-
+    
     cur.execute("SELECT * FROM customizedsessiondb WHERE user_id = ? AND date >= ?", (user_id, seven_days_ago))
     sessions = cur.fetchall()
-
+    
     sessions_count = len(sessions)
-    total_minutes = sum([s["duration"] for s in sessions])
+    total_minutes = 0
+    for s in sessions:
+        start_time = datetime.datetime.fromisoformat(s["start_time"].replace("Z", "+00:00"))
+        end_time = datetime.datetime.fromisoformat(s["end_time"].replace("Z", "+00:00"))
+        duration_minutes = (end_time - start_time).total_seconds() / 60  
+        total_minutes += duration_minutes
+    
+    total_hours = round(total_minutes / 60, 4)  
     
     start_date = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
     end_date = datetime.datetime.now().strftime("%Y-%m-%d")
-
+    
     if sessions:
         first_session_date = datetime.datetime.strptime(sessions[0]["date"], "%Y-%m-%d")
         start_date = first_session_date.strftime("%Y-%m-%d")
@@ -160,16 +167,18 @@ def dashboard():
     else:
         start_date = "N/A"
         end_date = "N/A"
-        conn.close()
-
+    
+    conn.close()
+    
     return render_template(
         "dashboard.html",
         start_date=start_date,
         end_date=end_date,
         sessions_count=sessions_count,
-        total_minutes=total_minutes,
+        total_hours=total_hours,
         sessions=sessions
     )
+
 
 @app.route("/flashcards", methods=["GET", "POST"])
 def flashcards():
@@ -179,7 +188,7 @@ def flashcards():
     cur = conn.cursor()
 
     if request.method == "POST":
-        question = request.form.get("question")
+        sessions=sessionsquestion = request.form.get("question")
         answer = request.form.get("answer")
 
         if question and answer:
@@ -189,13 +198,11 @@ def flashcards():
             )
             conn.commit()
 
-    
     cur.execute("SELECT * FROM flashcards WHERE user_id = ?", (user_id,))
     cards = cur.fetchall()
     conn.close()
 
     return render_template("flashcards.html", cards=cards)
-
 
 @app.route("/flashcards_data")
 def flashcards_data():

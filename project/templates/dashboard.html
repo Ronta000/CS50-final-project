@@ -1,19 +1,18 @@
 {% extends "layout.html" %}
-
-{% block title %}
-    Dashboard
+{% block title %} 
+    Dashboard 
 {% endblock %}
 
 {% block main %}
 <div class="container py-5">
-    <h1 class="display-5 fw-bold text-center mb-4"> Your Weekly Dashboard</h1>
+    <h1 class="display-5 fw-bold text-center mb-4">Your Weekly Dashboard</h1>
     <p class="text-center text-muted mb-4">From {{ start_date }} to {{ end_date }}</p>
-
+    
     <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
         <div class="col">
             <div class="card h-100">
                 <div class="card-body text-center">
-                    <h2 class="card-title"> Study Sessions</h2>
+                    <h2 class="card-title">Study Sessions</h2>
                     <p class="card-text display-4 text-primary">{{ sessions_count }}</p>
                 </div>
             </div>
@@ -21,7 +20,7 @@
         <div class="col">
             <div class="card h-100">
                 <div class="card-body text-center">
-                    <h2 class="card-title"> Total Study Hours</h2>
+                    <h2 class="card-title">Total Study Hours</h2>
                     <p class="card-text display-4 text-success">{{ total_hours|round(2) }} hrs</p>
                 </div>
             </div>
@@ -39,7 +38,7 @@
                             <th>Date</th>
                             <th>Start Time</th>
                             <th>End Time</th>
-                            <th>Duration (min)</th>
+                            <th>Duration</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,7 +47,7 @@
                             <td>{{ s.date }}</td>
                             <td>{{ s.start_time }}</td>
                             <td>{{ s.end_time }}</td>
-                            <td>{{ s.duration }}</td>
+                            <td>{% if s.duration == 60 %}1 min{% else %}{{ s.duration }} min{% endif %}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -65,7 +64,7 @@
         </div>
     </div>
     {% endif %}
-    <!-- Suggestion Cards -->
+
     <div class="row row-cols-1 row-cols-md-2 g-4">
         <div class="col">
             <div class="card h-100">
@@ -76,7 +75,6 @@
                 </div>
             </div>
         </div>
-        
         <div class="col">
             <div class="card h-100">
                 <div class="card-body text-center">
@@ -87,6 +85,5 @@
             </div>
         </div>
     </div>
-   
 </div>
 {% endblock %}
