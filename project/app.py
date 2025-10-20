@@ -243,6 +243,16 @@ def delete_flashcard(id):
 def quiz():
     return render_template("quiz.html")
 
+@app.route("/get_flashcards")
+def get_flashcards():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 403
+
+    user_id = session["user_id"]
+    flashcards = db.execute("SELECT question, answer FROM flashcards WHERE user_id = ?", user_id,)
+
+    return jsonify(flashcards)
+
 @app.route('/usersession' , methods=["GET" , "POST"])
 def usersession():
     if request.method == "POST":

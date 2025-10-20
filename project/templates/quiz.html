@@ -15,40 +15,36 @@
   <script>
     function normalize(str) {
       return str.trim().toLowerCase().replace(/\s+/g, ' ');
-    }
+  }
+    async function startQuiz() {
+    let quizDiv = document.getElementById("quiz");
+    quizDiv.innerHTML = "<p>Loading your flashcards...</p>";
 
-    function startQuiz() {
-      let flashcards = JSON.parse(localStorage.getItem("flashcards")) || [];
+    let response = await fetch("/get_flashcards");
+    let flashcards = await response.json();
 
-      if (flashcards.length < 5) {
+    if (!Array.isArray(flashcards) || flashcards.length < 5) {
         alert("You need at least 5 flashcards to start the quiz.");
         return;
-      }
-
-      // Shuffle
-      flashcards = flashcards.sort(() => Math.random() - 0.5);
-
-      // Take all flashcards (or limit if too many, but as per request: use all shuffled)
-      let questions = flashcards; // Use all, shuffled
-
-      let quizDiv = document.getElementById("quiz");
-      quizDiv.innerHTML = "";
-
-      questions.forEach((q, index) => {
-        quizDiv.innerHTML += `
-          <div>
-            <p>${index + 1}. ${q.question}</p>
-        <input type="text" id="answer${index}" placeholder="Your answer">
-          </div>
-        `;
-      });
-
-      // Save questions in memory for checking later
-      window.currentQuiz = questions;
-
-      document.getElementById("submitBtn").style.display = "block";
-      document.getElementById("result").innerHTML = ""; // Clear previous results
     }
+
+    flashcards = flashcards.sort(() => Math.random() - 0.5);
+
+    quizDiv.innerHTML = "";
+
+    flashcards.forEach((q, index) => {
+        quizDiv.innerHTML += `
+            <div>
+                <p>${index + 1}. ${q.question}</p>
+                <input type="text" id="answer${index}" placeholder="Your answer">
+            </div>
+        `;
+    });
+
+    window.currentQuiz = flashcards;
+    document.getElementById("submitBtn").style.display = "block";
+    document.getElementById("result").innerHTML = "";
+}
 
     function submitQuiz() {
       if (!window.currentQuiz) {

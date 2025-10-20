@@ -82,137 +82,137 @@
 }
 </style>
 <script>
-let timer;
-let minutes = 25;
-let seconds = 0;
-let isPaused = true;
-let enteredTime = null;
-let sessionStart = null;
+const TIMER_DEFAULT_MINUTES = 25; 
 
-const savedStart = sessionStorage.getItem("sessionStart");
+let timerInterval = null;
+let totalInitSeconds = TIMER_DEFAULT_MINUTES * 60;
+let sessionStart = null;      
+let pausedAccum = 0;          
+let pausedAt = null;          
+let isRunning = false;        
 
-if (savedStart) {
-    sessionStart = new Date(savedStart);
-    const elapsedSeconds = Math.floor((Date.now() - sessionStart.getTime()) / 1000);
-    const totalSeconds = 15 * 60;
-    const remaining = totalSeconds - elapsedSeconds;
+function loadState() {
+    const sStart = sessionStorage.getItem("sessionStart");
+    const sTotal = sessionStorage.getItem("totalInitSeconds");
+    const sPausedAccum = sessionStorage.getItem("pausedAccum");
+    const sPausedAt = sessionStorage.getItem("pausedAt");
 
-    if (remaining > 0) {
-        minutes = Math.floor(remaining / 60);
-        seconds = remaining % 60;
-        isPaused = false;
-        startTimer();
-    } else {
-        minutes = 0;
-        seconds = 0;
-        alert('Time is up! Take a break.');
-    }
+    if (sTotal) totalInitSeconds = parseInt(sTotal, 10);
+    if (sStart) sessionStart = new Date(sStart);
+    if (sPausedAccum) pausedAccum = parseInt(sPausedAccum, 10);
+    if (sPausedAt) pausedAt = new Date(sPausedAt);
 }
+function saveState() {
+    if (sessionStart) sessionStorage.setItem("sessionStart", sessionStart.toISOString());
+    else sessionStorage.removeItem("sessionStart");
 
-
-function startTimer() {
-    if (timer) clearInterval(timer);
-    timer = setInterval(updateTimer, 1000);
+    sessionStorage.setItem("totalInitSeconds", String(totalInitSeconds));
+    sessionStorage.setItem("pausedAccum", String(pausedAccum));
+    if (pausedAt) sessionStorage.setItem("pausedAt", pausedAt.toISOString());
+    else sessionStorage.removeItem("pausedAt");
 }
-
-function updateTimer() {
-    const timerElement = document.getElementById('timer');
-    const controlButtons = document.getElementById('controlButtons');
-    const breakButton = document.getElementById('breakButton');
-    
-    if (isPaused) {
-        timerElement.textContent = formatTime(minutes, seconds);
-        return;
-    }
-    
-    if (minutes === 0 && seconds === 0) {
-        clearInterval(timer);
-        alert('Time is up! Take a break.');
-        isPaused = true;
-        controlButtons.style.display = 'none';
-        breakButton.style.display = 'block';
-        return;
-    }
-    
-    if (seconds === 0) {
-        if (minutes > 0) {
-            minutes--;
-            seconds = 59;
-        }
-    } else {
-        seconds--;
-    }
-    
-    if (minutes === 0 && seconds === 0) {
-        clearInterval(timer);
-        alert('Time is up! Take a break.');
-        isPaused = true;
-        controlButtons.style.display = 'none';
-        breakButton.style.display = 'block';
-    }
-    
-    timerElement.textContent = formatTime(minutes, seconds);
-}
-
-function formatTime(minutes, seconds) {
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-function togglePauseResume() {
-    const pauseResumeButton = document.querySelector('#controlButtons button');
-    isPaused = !isPaused;
-
-    if (isPaused) {
-        clearInterval(timer);
-        pauseResumeButton.textContent = 'Resume';
-    } else {
-        startTimer();
-        pauseResumeButton.textContent = 'Pause';
-    }
-}
-
-function restartTimer() {
-    clearInterval(timer);
-    minutes = enteredTime || 25;
-    seconds = 0;
-    isPaused = true;
-    const timerElement = document.getElementById('timer');
-    timerElement.textContent = formatTime(minutes, seconds);
-    const pauseResumeButton = document.querySelector('#controlButtons button');
-    pauseResumeButton.textContent = 'Start';
-    const controlButtons = document.getElementById('controlButtons');
-    const breakButton = document.getElementById('breakButton');
-    controlButtons.style.display = 'flex';
-    breakButton.style.display = 'none';
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('timer').textContent = formatTime(minutes, seconds);
-});
-
-
-
-function togglePauseResume() {
-    const pauseResumeButton = document.querySelector('#controlButtons button');
-    isPaused = !isPaused;
-
-    if (isPaused) {
-        clearInterval(timer);
-        pauseResumeButton.textContent = 'Resume';
-    } else {
-        if (!sessionStart) sessionStart = new Date(); 
-        sessionStorage.setItem("sessionStart", sessionStart.toISOString());
-        startTimer();
-        pauseResumeButton.textContent = 'Pause';
-    }
-}
-
-function endSession() {
-    const end = new Date();
+function clearState() {
     sessionStorage.removeItem("sessionStart");
-    const duration = Math.round(((end - sessionStart) / 1000) / 60);
-    const date = end.toISOString().split("T")[0];
+    sessionStorage.removeItem("totalInitSeconds");
+    sessionStorage.removeItem("pausedAccum");
+    sessionStorage.removeItem("pausedAt");
+}
+function formatTime(totalSeconds) {
+    if (totalSeconds < 0) totalSeconds = 0;
+    const m = Math.floor(totalSeconds / 60);
+    const s = Math.floor(totalSeconds % 60);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function computeRemainingSeconds() {
+    if (!sessionStart) return totalInitSeconds;
+    const now = Date.now();
+    const elapsedMs = now - sessionStart.getTime() - pausedAccum;
+    const elapsedSec = Math.floor(elapsedMs / 1000);
+    return totalInitSeconds - elapsedSec;
+}
+function updateUI(remainingSec) {
+    const timerEl = document.getElementById('timer');
+    const controlBtns = document.getElementById('controlButtons');
+    const breakBtn = document.getElementById('breakButton');
 
+    timerEl.textContent = formatTime(remainingSec);
+
+    if (remainingSec <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        isRunning = false;
+        controlBtns.style.display = 'none';
+        breakBtn.style.display = 'block';
+        timerEl.textContent = "00:00";
+        endSession();
+    } else {
+        controlBtns.style.display = 'flex';
+        breakBtn.style.display = 'none';
+    }
+}
+function startIntervalIfNeeded() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (!isRunning) return;
+        const remaining = computeRemainingSeconds();
+        updateUI(remaining);
+    }, 1000);
+}
+function togglePauseResume() {
+    const btn = document.querySelector('#controlButtons button');
+    if (!sessionStart) {
+        sessionStart = new Date();
+        pausedAccum = 0;
+        pausedAt = null;
+        totalInitSeconds = TIMER_DEFAULT_MINUTES * 60;
+        isRunning = true;
+        btn.textContent = 'Pause';
+        saveState();
+        startIntervalIfNeeded();
+        updateUI(computeRemainingSeconds());
+        return;
+    }
+    if (!isRunning) {
+        if (pausedAt) {
+            pausedAccum += (Date.now() - pausedAt.getTime());
+            pausedAt = null;
+        }
+        isRunning = true;
+        btn.textContent = 'Pause';
+        saveState();
+        startIntervalIfNeeded();
+        updateUI(computeRemainingSeconds());
+        return;
+    }
+    if (isRunning) {
+        pausedAt = new Date();
+        isRunning = false;
+        btn.textContent = 'Resume';
+        saveState();
+    }
+}
+function restartTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    sessionStart = null;
+    pausedAccum = 0;
+    pausedAt = null;
+    isRunning = false;
+    totalInitSeconds = TIMER_DEFAULT_MINUTES * 60;
+    clearState();
+    document.getElementById('timer').textContent = formatTime(totalInitSeconds);
+    const btn = document.querySelector('#controlButtons button');
+    btn.textContent = 'Start';
+    document.getElementById('controlButtons').style.display = 'flex';
+    document.getElementById('breakButton').style.display = 'none';
+}
+function endSession() {
+    if (!sessionStart) return;
+    const end = new Date();
+    let elapsedMs = end.getTime() - sessionStart.getTime() - pausedAccum;
+    if (elapsedMs < 0) elapsedMs = 0;
+    const durationMinutes = Number((elapsedMs / 1000 / 60).toFixed(2));
+
+    clearState();
 
     fetch("/customizedsession", {
         method: "POST",
@@ -220,53 +220,43 @@ function endSession() {
         body: JSON.stringify({
             start_time: sessionStart.toISOString(),
             end_time: end.toISOString(),
-            duration: duration,
-            date: date 
+            duration: durationMinutes,
+            date: end.toISOString().split("T")[0]
         })
-    }).then(res => res.json())
-      .then(data => console.log(data))
-      .catch(err => console.error(err));
+    })
+    .then(res => res.json().catch(()=>{}))
+    .then(() => console.log("Session sent:", durationMinutes, "minutes"))
+    .catch(err => console.error("Error saving session:", err));
+
+    sessionStart = null;
+    pausedAccum = 0;
+    pausedAt = null;
+    isRunning = false;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 }
-
-let lastUpdate = Date.now();
-
-function updateTimer() {
-    const timerElement = document.getElementById('timer');
-    const controlButtons = document.getElementById('controlButtons');
-    const breakButton = document.getElementById('breakButton');
-
-    if (isPaused) {
-        lastUpdate = Date.now();
-        timerElement.textContent = formatTime(minutes, seconds);
-        return;
+document.addEventListener('DOMContentLoaded', () => {
+    loadState();
+    if (pausedAt) {
+        isRunning = false;
+        document.querySelector('#controlButtons button').textContent = 'Resume';
+    } else if (sessionStart) {
+        const rem = computeRemainingSeconds();
+        if (rem > 0) {
+            isRunning = true;
+            document.querySelector('#controlButtons button').textContent = 'Pause';
+            startIntervalIfNeeded();
+        } else {
+            sessionStart = null;
+            pausedAccum = 0;
+            clearState();
+            document.querySelector('#controlButtons button').textContent = 'Start';
+        }
+        updateUI(Math.max(computeRemainingSeconds(), 0));
+    } else {
+        document.getElementById('timer').textContent = formatTime(totalInitSeconds);
+        document.querySelector('#controlButtons button').textContent = 'Start';
     }
-
-    const now = Date.now();
-    const delta = Math.floor((now - lastUpdate) / 1000); 
-    if (delta > 0) {
-        const totalSeconds = minutes * 60 + seconds - delta;
-        minutes = Math.floor(totalSeconds / 60);
-        seconds = totalSeconds % 60;
-        lastUpdate = now;
-    }
-
-    if (minutes <= 0 && seconds <= 0) {
-        clearInterval(timer);
-        alert('Time is up! Take a break.');
-        isPaused = true;
-        controlButtons.style.display = 'none';
-        breakButton.style.display = 'block';
-        endSession();
-        return;
-    }
-
-    timerElement.textContent = formatTime(Math.max(minutes, 0), Math.max(seconds, 0));
-}
-body: JSON.stringify({
-    start_time: sessionStart.toISOString(),
-    end_time: end.toISOString(),
-    duration: duration
-})
-
+});
 </script>
+
 {% endblock %}
