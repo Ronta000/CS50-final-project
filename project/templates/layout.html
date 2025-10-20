@@ -17,11 +17,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FocusHive</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='focushive1.png') }}">
-    </head>
 </head>
-<body>
+</head>
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="check2" viewBox="0 0 16 16">
+    <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+  </symbol>
+  <symbol id="circle-half" viewBox="0 0 16 16">
+    <path d="M8 15A7 7 0 1 0 8 1v14z"/>
+  </symbol>
+  <symbol id="moon-stars-fill" viewBox="0 0 16 16">
+    <path d="M6 .278a.5.5 0 0 1 .58.093 7 7 0 1 0 8.05 8.05.5.5 0 0 1 .093.58A7.002 7.002 0 0 1 6 .278zM11.5 6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 1.415-1.414.5.5 0 0 1-.708-.708A2.5 2.5 0 1 1 11 6.5a.5.5 0 0 1 .5-.5z"/>
+  </symbol>
+  <symbol id="sun-fill" viewBox="0 0 16 16">
+    <path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 1.5a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 1-1 0V14a.5.5 0 0 1 .5-.5zM8 1a.5.5 0 0 1 .5.5V3a.5.5 0 0 1-1 0V1.5A.5.5 0 0 1 8 1zm6.364 10.95a.5.5 0 0 1 .707.707l-1.061 1.061a.5.5 0 1 1-.707-.707l1.061-1.061zM3.343 3.343a.5.5 0 0 1 .707 0L5.11 4.404a.5.5 0 1 1-.707.707L3.343 4.05a.5.5 0 0 1 0-.707zM1.5 8a.5.5 0 0 1 .5-.5h1.5a.5.5 0 1 1 0 1H2a.5.5 0 0 1-.5-.5zm12 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 1 1 0 1H14a.5.5 0 0 1-.5-.5zM3.343 12.657a.5.5 0 0 1 0-.707L4.404 10.89a.5.5 0 1 1 .707.707L4.05 12.657a.5.5 0 0 1-.707 0z"/>
+  </symbol>
+</svg>
 
-    
+<body>
+   
     <nav class="navbar navbar-expand-md navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">FocusHive</a>
@@ -67,6 +81,96 @@
     <footer class="text-center mt-5 mb-3 text-muted">
         <p>FocusHive © 2025</p>
     </footer>
- 
+    <div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
+  <button class="btn btn-bd-primary py-2 d-flex align-items-center"
+          id="bd-theme"
+          type="button"
+          aria-expanded="false"
+          data-bs-toggle="dropdown"
+          aria-label="Toggle theme (auto)">
+    <svg class="bi my-1 theme-icon-active" width="1em" height="1em"><use href="#circle-half"></use></svg>
+    <span class="visually-hidden" id="bd-theme-text">Toggle theme</span>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bd-theme-text">
+    <li>
+      <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
+        <svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="#sun-fill"></use></svg>
+        Light
+        <svg class="bi ms-auto d-none" width="1em" height="1em"><use href="#check2"></use></svg>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
+        <svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="#moon-stars-fill"></use></svg>
+        Dark
+        <svg class="bi ms-auto d-none" width="1em" height="1em"><use href="#check2"></use></svg>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto">
+        <svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="#circle-half"></use></svg>
+        Auto
+        <svg class="bi ms-auto d-none" width="1em" height="1em"><use href="#check2"></use></svg>
+      </button>
+    </li>
+  </ul>
+</div>
+
+<script>
+  (() => {
+    const storedTheme = localStorage.getItem('theme')
+
+    const getPreferredTheme = () => {
+      if (storedTheme) {
+        return storedTheme
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+
+    const setTheme = function (theme) {
+      if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark')
+      } else {
+        document.documentElement.setAttribute('data-bs-theme', theme)
+      }
+    }
+
+    setTheme(getPreferredTheme())
+
+    const showActiveTheme = (theme) => {
+      const activeThemeIcon = document.querySelector('.theme-icon-active use')
+      const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
+      const svgOfActiveBtn = btnToActive.querySelector('svg use').getAttribute('href')
+
+      document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
+        element.classList.remove('active')
+      })
+
+      btnToActive.classList.add('active')
+      activeThemeIcon.setAttribute('href', svgOfActiveBtn)
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (storedTheme !== 'light' && storedTheme !== 'dark') {
+        setTheme(getPreferredTheme())
+      }
+    })
+
+    window.addEventListener('DOMContentLoaded', () => {
+      showActiveTheme(getPreferredTheme())
+
+      document.querySelectorAll('[data-bs-theme-value]')
+        .forEach(toggle => {
+          toggle.addEventListener('click', () => {
+            const theme = toggle.getAttribute('data-bs-theme-value')
+            localStorage.setItem('theme', theme)
+            setTheme(theme)
+            showActiveTheme(theme)
+          })
+        })
+    })
+  })()
+</script>
+
 </body>
 </html>
