@@ -11,8 +11,6 @@
 
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='focushive1.png') }}">
 </head>
-
-<!-- SVG icons (needed for the toggle button icons) -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="check2" viewBox="0 0 16 16">
     <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
@@ -70,8 +68,6 @@
   <footer class="text-center mt-5 mb-3 text-muted">
     <p>FocusHive © 2025</p>
   </footer>
-
-  <!-- Toggle (ضعه قبل نهاية الـ body عشان يشتغل في كل الصفحات) -->
   <div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
     <button class="btn btn-bd-primary py-2 d-flex align-items-center"
             id="bd-theme"
@@ -106,11 +102,8 @@
       </li>
     </ul>
   </div>
-
-  <!-- سكربت الثيم (من Bootstrap docs) -->
   <script>
     (() => {
-      // نقرأ القيمة المحفوظة لو موجودة
       const storedTheme = localStorage.getItem('theme')
 
       const getPreferredTheme = () => {
@@ -142,8 +135,6 @@
         btnToActive.classList.add('active')
         activeThemeIcon.setAttribute('href', svgOfActiveBtn)
       }
-
-      // لو إعداد الجهاز اتغير
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if (localStorage.getItem('theme') !== 'light' && localStorage.getItem('theme') !== 'dark') {
           setTheme(getPreferredTheme())
