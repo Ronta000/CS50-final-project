@@ -149,7 +149,7 @@ async function loadFlashcards() {
     });
 }
 async function deleteFlashcard(id, event) {
-    event.stopPropagation(); // علشان مايتقلبش الكارت لما نضغط حذف
+    event.stopPropagation(); 
     await fetch(`/delete_flashcard/${id}`, { method: "DELETE" });
     loadFlashcards();
 }
