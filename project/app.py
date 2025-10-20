@@ -149,11 +149,14 @@ def dashboard():
     
     sessions_count = len(sessions)
     total_minutes = 0
+    calculated_sessions = []
     for s in sessions:
         start_time = datetime.datetime.fromisoformat(s["start_time"].replace("Z", "+00:00"))
         end_time = datetime.datetime.fromisoformat(s["end_time"].replace("Z", "+00:00"))
         duration_minutes = (end_time - start_time).total_seconds() / 60  
         total_minutes += duration_minutes
+        s["calculated_duration"] = round(duration_minutes)
+        calculated_sessions.append(s)
     
     total_hours = round(total_minutes / 60, 4)  
     
@@ -176,7 +179,7 @@ def dashboard():
         end_date=end_date,
         sessions_count=sessions_count,
         total_hours=total_hours,
-        sessions=sessions
+        sessions=calculated_sessions  
     )
 
 
