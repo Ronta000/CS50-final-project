@@ -6,11 +6,16 @@
 {% block main %}
  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .card { max-width: 320px; margin: 0 auto; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .card { max-width: 420px; margin: 0 auto; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .display { font-size: 24px; font-weight: 600; }
         .list-group-item { display: flex; justify-content: space-between; align-items: center; }
         .session-type-btn.active { background-color: #007bff; color: white; }
         .session-type-btn { width: 120px; }
+        /* center the minutes box */
+        .inputs { justify-content: center; }
+        .minutes-box { display:flex; flex-direction:column; align-items:center; }
+        .minutes-box label { margin-bottom:4px; }
+        .minutes-box input { width: 100px; text-align:center; }
     </style>
     <div class="card text-center">
         <h1 class="card-title">Set Timer for your Session/Break</h1>
@@ -20,13 +25,9 @@
             <button id="breakBtn" class="btn btn-outline-primary session-type-btn">Break</button>
         </div>
         <div class="inputs d-flex justify-content-center gap-2 mb-2">
-            <div>
-                <label for="minutes">Minutes</label><br>
-                <input id="minutes" type="number" min="0" value="0" class="form-control form-control-sm" style="width: 70px; text-align: center;">
-            </div>
-            <div>
-                <label for="seconds">Seconds</label><br>
-                <input id="seconds" type="number" min="0" max="59" value="30" class="form-control form-control-sm" style="width: 70px; text-align: center;">
+            <div class="minutes-box">
+                <label for="minutes">Minutes</label>
+                <input id="minutes" type="number" min="1" max="240" step="1" inputmode="numeric" pattern="[0-9]*" value="25" class="form-control form-control-sm" aria-label="Minutes" title="Enter minutes (1–240)" oninput="if(this.value==='') return; this.value = Math.max(1, Math.floor(this.value));">
             </div>
         </div>
         <div class="display mb-2" id="display">25:00</div>
@@ -47,7 +48,6 @@
     <script defer>
     (async function () {
         const minutesInput = document.getElementById('minutes');
-        const secondsInput = document.getElementById('seconds');
         const display = document.getElementById('display');
         const startBtn = document.getElementById('startBtn');
         const pauseBtn = document.getElementById('pauseBtn');
@@ -56,14 +56,16 @@
         const spaceToggle = document.getElementById('spaceToggle');
         const studyBtn = document.getElementById('studyBtn');
         const breakBtn = document.getElementById('breakBtn');
-        const sessionList = document.getElementById('sessionList');
 
-        let totalSeconds = parseInt(secondsInput.value) + parseInt(minutesInput.value || 0) * 60;
-        let remaining = totalSeconds;
+        let remaining = 0; 
         let intervalId = null;
         let running = false;
         let finished = false;
-        let isStudySession = true; 
+        let isStudySession = true;
+
+        // timestamps in ms
+        let actualStartTimestamp = null;
+        let endTimestamp = null;
 
         function formatTime(sec) {
             const m = Math.floor(sec / 60);
@@ -74,11 +76,9 @@
         function updateDisplay() { display.textContent = formatTime(remaining); }
 
         function readInputs() {
-            const m = Math.max(0, parseInt(minutesInput.value || 0));
-            let s = Math.max(0, parseInt(secondsInput.value || 0));
-            if (s > 59) s = 59;
-            totalSeconds = m * 60 + s;
-            remaining = totalSeconds;
+            if (running) return;
+            const m = Math.max(1, Math.floor(Number(minutesInput.value || 0)));
+            remaining = m * 60;
             updateDisplay();
         }
 
@@ -88,31 +88,56 @@
         }
         function toggleInputs(disabled) {
             minutesInput.disabled = disabled;
-            secondsInput.disabled = disabled;
         }
 
+        function toggleSessionButtons(disabled) {
+            studyBtn.disabled = disabled;
+            breakBtn.disabled = disabled;
+            if (disabled) {
+                studyBtn.classList.add('disabled');
+                breakBtn.classList.add('disabled');
+            } else {
+                studyBtn.classList.remove('disabled');
+                breakBtn.classList.remove('disabled');
+            }
+        }
+
+        function recalcRemainingFromClock() {
+            if (endTimestamp == null) return;
+            remaining = Math.max(0, Math.ceil((endTimestamp - Date.now()) / 1000));
+        }
 
         function tick() {
+            recalcRemainingFromClock();
+            updateDisplay();
             if (remaining <= 0) {
                 stopInterval();
                 finished = true;
                 running = false;
                 onFinish();
-                return;
             }
-            remaining -= 1;
-            updateDisplay();
+        }
+
+        function startIntervalLoop() {
+            if (intervalId) return;
+            intervalId = setInterval(tick, 500);
         }
 
         function startInterval() {
-            if (intervalId) return;
-            intervalId = setInterval(tick, 1000);
+            if (running) return;
+            endTimestamp = Date.now() + remaining * 1000;
+            actualStartTimestamp = actualStartTimestamp || Date.now();
+
+            startIntervalLoop();
             running = true;
+            finished = false;
             toggleInputs(true);
+            toggleSessionButtons(true); 
             pauseBtn.textContent = 'Pause';
             pauseBtn.disabled = false;
             resetBtn.disabled = false;
             startBtn.disabled = true;
+            tick();
         }
 
         function stopInterval() {
@@ -123,54 +148,64 @@
         }
 
         function pauseTimer() {
+            if (!running) return;
+            recalcRemainingFromClock();
             stopInterval();
             running = false;
             toggleInputs(false);
+            toggleSessionButtons(true);
             pauseBtn.textContent = 'Resume';
         }
 
         function resumeTimer() {
             if (finished) return;
-            startInterval();
+            if (running) return;
+            endTimestamp = Date.now() + remaining * 1000;
+            startIntervalLoop();
+            running = true;
+            pauseBtn.textContent = 'Pause';
+            toggleInputs(true);
+            toggleSessionButtons(true);
         }
 
         function resetTimer() {
             stopInterval();
-            readInputs();
+            actualStartTimestamp = null;
+            endTimestamp = null;
             running = false;
             finished = false;
             toggleInputs(false);
+            toggleSessionButtons(false);
             pauseBtn.disabled = true;
             pauseBtn.textContent = 'Pause';
             startBtn.disabled = false;
             resetBtn.disabled = true;
+            readInputs();
         }
 
         async function logSession() {
-            if (!isStudySession) return; 
-
-            const start_time = new Date(Date.now() - totalSeconds * 1000).toISOString();
-            const end_time = new Date().toISOString();
-            const duration =totalSeconds;
-            const date = new Date().toISOString().split("T")[0];
+            if (!isStudySession || !actualStartTimestamp) return;
+            const actualEnd = new Date().toISOString();
+            const actualStart = new Date(actualStartTimestamp).toISOString();
+            const durationSec = Math.round((Date.now() - actualStartTimestamp) / 1000);
+            const date = new Date().toISOString().split('T')[0];
 
             try {
-                const response = await fetch("/usersession", {  
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                const response = await fetch('/usersession', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        start_time,
-                        end_time,
-                        duration,
+                        start_time: actualStart,
+                        end_time: actualEnd,
+                        duration: durationSec,
                         date,
-                        session_type: "study"
+                        session_type: 'study'
                     })
                 });
-
                 const result = await response.json();
                 console.log(result.message || result.error);
             } catch (error) {
-                console.error("Error saving session:", error);
+                console.error('Error saving session:', error);
             }
         }
 
@@ -180,6 +215,7 @@
             startBtn.disabled = false;
             logSession();
             toggleInputs(false);
+            toggleSessionButtons(false);
             if (soundToggle.checked) playBeep();
         }
 
@@ -205,13 +241,25 @@
             } catch (e) {}
         }
 
-        studyBtn.addEventListener('click', () => { isStudySession = true; updateSessionTypeButtons(); });
-        breakBtn.addEventListener('click', () => { isStudySession = false; updateSessionTypeButtons(); });
+        studyBtn.addEventListener('click', () => { if (!studyBtn.disabled) { isStudySession = true; updateSessionTypeButtons(); } });
+        breakBtn.addEventListener('click', () => { if (!breakBtn.disabled) { isStudySession = false; updateSessionTypeButtons(); } });
 
-        minutesInput.addEventListener('input', readInputs);
-        secondsInput.addEventListener('input', readInputs);
-        startBtn.addEventListener('click', () => { if (finished) resetTimer(); if (remaining <= 0) readInputs(); if (remaining <= 0) return; startInterval(); });
-        pauseBtn.addEventListener('click', () => { if (!running) resumeTimer(); else pauseTimer(); });
+        minutesInput.addEventListener('input', () => {
+            if (!running) readInputs();
+        });
+
+        startBtn.addEventListener('click', () => {
+            if (finished) resetTimer();
+            if (remaining <= 0) readInputs();
+            if (remaining <= 0) return;
+            if (!actualStartTimestamp) actualStartTimestamp = Date.now();
+            startInterval();
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            if (!running) resumeTimer(); else pauseTimer();
+        });
+
         resetBtn.addEventListener('click', resetTimer);
 
         window.addEventListener('keydown', (e) => {
@@ -229,8 +277,34 @@
             }
         });
 
+        
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                // recalc and update instantly
+                if (endTimestamp) {
+                    recalcRemainingFromClock();
+                    updateDisplay();
+        
+                    if (remaining <= 0 && !finished) {
+                        stopInterval();
+                        finished = true;
+                        running = false;
+                        onFinish();
+                    }
+                }
+            }
+        });
+        window.addEventListener('focus', () => {
+            if (endTimestamp) {
+                recalcRemainingFromClock();
+                updateDisplay();
+            }
+        });
+
+        // initial state
         readInputs();
         updateSessionTypeButtons();
+        toggleSessionButtons(false);
     })();
 </script>
 {% endblock %}
