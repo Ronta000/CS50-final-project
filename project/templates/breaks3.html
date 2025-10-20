@@ -3,176 +3,263 @@
 {% block title %}
     Break 3
 {% endblock %}
-    this timer break will take 3 minutes
+
 {% block main %}
-<div class="main">
-    <h1 style="color:rgb(0, 102, 255)">FocusHive</h1>
-    <div class="timer-circle" id="timer">03:00</div>
-    <div class="control-buttons">
-        <button onclick="togglePauseResume()">Start</button>
-        <button onclick="restartTimer()">Restart</button>
+   <h1 class="fh-title">FocusHive</h1>
+
+<div class="fh-wrapper">
+  <div class="fh-card">
+    <div class="timer-circle" id="timer" aria-live="polite">03:00</div>
+
+    <div class="control-buttons" role="group" aria-label="Timer controls">
+      <button id="startPauseBtn" type="button">Start</button>
+      <button id="restartBtn" type="button">Restart</button>
     </div>
-    <div class="next-page-button" style="display: none;">
-        <button onclick="goToNextPage()">Go to Next Page</button>
+
+    <div class="next-link-row" style="margin-top:12px; width:100%; text-align:center;">
+      <button id="goBtn" disabled style="display:none; margin-left:8px;">Time is up! Go to next page</button>
     </div>
+
+  </div>
 </div>
 
+<script>
+(() => {
+  const DEFAULT_MINUTES = 3;
+  const DURATION_MS = DEFAULT_MINUTES * 60 * 1000;
+  let remainingMs = DURATION_MS;
+  let startTimestamp = null;     
+  let timerId = null;            
+  let running = false;
+  let paused = false;
+
+  const timerEl = document.getElementById('timer');
+  const startPauseBtn = document.getElementById('startPauseBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const goBtn = document.getElementById('goBtn');
+
+  function fmt(ms) {
+    const secs = Math.ceil(ms / 1000); 
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function updateTimerUI() {
+    if (!running) {
+      timerEl.textContent = fmt(remainingMs);
+      return;
+    }
+    const now = Date.now();
+    const elapsed = now - startTimestamp;
+    const left = Math.max(0, remainingMs - elapsed);
+
+    if (left <= 0) {
+      clearIntervalSafely();
+      running = false;
+      paused = false;
+      remainingMs = 0;
+      timerEl.textContent = '00:00';
+      startPauseBtn.textContent = 'Start';
+      onTimeUp();
+      return;
+    }
+
+    timerEl.textContent = fmt(left);
+  }
+
+  function clearIntervalSafely() {
+    if (timerId !== null) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function startTimer() {
+    if (running) return;
+    startTimestamp = Date.now();
+    running = true;
+    paused = false;
+    updateTimerUI();
+    clearIntervalSafely();
+    timerId = setInterval(updateTimerUI, 1000);
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(()=>{});
+    }
+  }
+
+  function pauseTimer() {
+    if (!running) return;
+    const now = Date.now();
+    const elapsed = now - startTimestamp;
+    remainingMs = Math.max(0, remainingMs - elapsed);
+    clearIntervalSafely();
+    running = false;
+    paused = true;
+    startPauseBtn.textContent = 'Resume';
+    updateTimerUI();
+  }
+
+  function resumeTimer() {
+    if (running) return;
+    startTimer();
+    startPauseBtn.textContent = 'Pause';
+  }
+
+  function restartTimer() {
+    clearIntervalSafely();
+    remainingMs = DURATION_MS;
+    running = false;
+    paused = false;
+    startTimestamp = null;
+    timerEl.textContent = fmt(remainingMs);
+    startPauseBtn.textContent = 'Start';
+    goBtn.style.display = 'none';
+    goBtn.disabled = true;
+  }
+
+  function onTimeUp() {
+    playBeep();
+    goBtn.style.display = 'inline-block';
+    goBtn.disabled = false;
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('FocusHive', { body: "Time's up! Go to next page." });
+      } catch (e) {}
+    } else {
+      try { alert("Time's up! Go to next page."); } catch(e){}
+    }
+  }
+
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880;
+      g.gain.value = 0.0001;
+      o.connect(g);
+      g.connect(ctx.destination);
+      const now = ctx.currentTime;
+      g.gain.cancelScheduledValues(now);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+      o.start(now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+      o.stop(now + 0.65);
+      setTimeout(()=>{ try{ ctx.close(); }catch(e){} }, 800);
+    } catch(e) {}
+  }
+
+  startPauseBtn.addEventListener('click', () => {
+    if (!running && !paused) {
+      startTimer();
+      startPauseBtn.textContent = 'Pause';
+    } else if (running && !paused) {
+      pauseTimer();
+    } else if (!running && paused) {
+      resumeTimer();
+    }
+  });
+
+  restartBtn.addEventListener('click', () => {
+    restartTimer();
+  });
+
+  goBtn.addEventListener('click', () => {
+    window.location.href = '/focusmood';
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      updateTimerUI();
+    }
+  });
+
+  timerEl.textContent = fmt(remainingMs);
+  goBtn.style.display = 'none';
+  goBtn.disabled = true;
+
+  window.FOCUSHIVE_TIMER_READY = true;
+})();
+</script>
+
 <style>
-.main {
-    background-color: #fff;
-    border-radius: 15px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    padding: 10px 20px;
-    transition: transform 0.2s;
-    width: 500px;
-    height: 400px;
-    text-align: center;
-    margin: 0 auto;
+.fh-title {
+  text-align: center;
+  color: #0b6ed1;
+  margin: 10px 0;
+  font-weight: 700;
+  font-size: 28px;
+}
+
+.fh-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.fh-card {
+  width: 400px;
+  background: #ffffffcc;
+  border-radius: 18px;
+  padding: 30px 32px;
+  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
 .timer-circle {
-    border-radius: 50%;
-    width: 200px;
-    height: 200px;
-    margin: 20px auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 25px;
-    color: rgb(20, 50, 220);
-    border: 8px solid #34db58;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #0d47a1;
+  border: 8px solid #64b5f6;
+  background: radial-gradient(circle, #e3f7ff 0%, #ccecff 100%);
+  box-shadow: inset 0 0 18px rgba(100,181,246,0.25);
 }
 
 .control-buttons {
-    margin-top: 75px;
-    display: flex;
-    justify-content: space-evenly;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 4px;
 }
 
 .control-buttons button {
-    background-color:  #db7f34;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
+  background: linear-gradient(135deg, #42a5f5, #64b5f6);
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(66,165,245,0.25);
 }
 
-.control-buttons button:hover {
-    background-color: #3748e6;
-    transition: background-color 0.3s;
+.next-link-row button {
+  background: linear-gradient(135deg, #0077cc, #42a5f5);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-.next-page-button {
-    margin-top: 20px;
-}
-
-.next-page-button button {
-    background-color: #2ecc71;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.next-page-button button:hover {
-    background-color: #27ae60;
-    transition: background-color 0.3s;
+.next-link-row button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 </style>
 
-<script>
-let timer;
-let minutes = 3;
-let seconds = 0;
-let isPaused = true;
-let enteredTime = 5;
-
-const savedTime = sessionStorage.getItem("breakTimer");
-if (savedTime) {
-    const { m, s, paused } = JSON.parse(savedTime);
-    minutes = m;
-    seconds = s;
-    isPaused = paused;
-}
-
-function startTimer() {
-    if (timer) clearInterval(timer);
-    timer = setInterval(updateTimer, 1000);
-}
-
-let lastUpdate = Date.now();
-
-function updateTimer() {
-    const timerElement = document.getElementById('timer');
-    const controlButtons = document.getElementById('controlButtons');
-    const breakButton = document.getElementById('breakButton');
-
-    if (isPaused) {
-        lastUpdate = Date.now();
-        timerElement.textContent = formatTime(minutes, seconds);
-        return;
-    }
-
-    const now = Date.now();
-    const delta = Math.floor((now - lastUpdate) / 1000); 
-    if (delta > 0) {
-        const totalSeconds = minutes * 60 + seconds - delta;
-        minutes = Math.floor(totalSeconds / 60);
-        seconds = totalSeconds % 60;
-        lastUpdate = now;
-    }
-
-    if (minutes <= 0 && seconds <= 0) {
-        clearInterval(timer);
-        alert('Time is up! Go to next page.');
-        isPaused = true;
-        controlButtons.style.display = 'none';
-        breakButton.style.display = 'block';
-        endSession();
-        return;
-    }
-
-    timerElement.textContent = formatTime(Math.max(minutes, 0), Math.max(seconds, 0));
-}
-
-function formatTime(minutes, seconds) {
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-function togglePauseResume() {
-    const pauseResumeButton = document.querySelector('.control-buttons button');
-    isPaused = !isPaused;
-
-    if (isPaused) {
-        clearInterval(timer);
-        pauseResumeButton.textContent = 'Resume';
-    } else {
-        startTimer();
-        pauseResumeButton.textContent = 'Pause';
-    }
-}
-
-function restartTimer() {
-    clearInterval(timer);
-    minutes = enteredTime || 3;      
-    seconds = 0;
-    isPaused = true;
-    const timerElement = document.getElementById('timer');
-    const pauseResumeButton = document.querySelector('.control-buttons button');
-    const nextPageButton = document.querySelector('.next-page-button');
-    timerElement.textContent = formatTime(minutes, seconds);
-    pauseResumeButton.textContent = 'Start';
-    nextPageButton.style.display = 'none';
-}
-
-function goToNextPage() {
-    window.location.href = '/focusmood';
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('timer').textContent = formatTime(minutes, seconds);
-});
-</script>
 {% endblock %}
