@@ -134,49 +134,88 @@ def dashboard():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     user_id = session.get("user_id")
-    
+
     if not user_id:
         conn.close()
         return redirect("/register")
-    
+
     seven_days_ago = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
-    
+
     cur.execute("DELETE FROM customizedsessiondb WHERE user_id = ? AND date < ?", (user_id, seven_days_ago))
     conn.commit()
-    
+
     cur.execute("SELECT * FROM customizedsessiondb WHERE user_id = ? AND date >= ?", (user_id, seven_days_ago))
     sessions = cur.fetchall()
-    
+
     sessions_count = len(sessions)
     total_minutes = 0
     calculated_sessions = []
-    calculated_sessions = []
-    total_minutes = 0
+
+    time_hhmm_re = re.compile(r'^\d{1,2}:\d{2}$')
 
     for s in sessions:
         s_dict = dict(s)
+        start_raw = s_dict.get("start_time")
+        end_raw = s_dict.get("end_time")
+        row_date = s_dict.get("date")
+
+        start_time = None
+        end_time = None
 
         try:
-            start_time = datetime.datetime.fromisoformat(s_dict["start_time"].replace("Z", "+00:00"))
-            end_time = datetime.datetime.fromisoformat(s_dict["end_time"].replace("Z", "+00:00"))
-        except ValueError:
-            start_time = datetime.datetime.fromtimestamp(float(s_dict["start_time"]))
-            end_time = datetime.datetime.fromtimestamp(float(s_dict["end_time"]))
+            if start_raw is None:
+                raise ValueError("no start_time")
+            try:
+                start_ts = float(start_raw)
+                start_time = datetime.datetime.fromtimestamp(start_ts)
+            except Exception:
+                if time_hhmm_re.match(str(start_raw)):
+                    start_time = datetime.datetime.fromisoformat(f"{row_date}T{start_raw}")
+                else:
+                    start_time = datetime.datetime.fromisoformat(str(start_raw).replace("Z", "+00:00"))
+        except Exception:
+            try:
+                start_time = datetime.datetime.fromisoformat(f"{row_date}T00:00:00")
+            except Exception:
+                start_time = None
 
-        duration_minutes = (end_time - start_time).total_seconds() / 60
-        if duration_minutes > 180:
-            duration_minutes = duration_minutes / 60
+        try:
+            if end_raw is None:
+                raise ValueError("no end_time")
+            try:
+                end_ts = float(end_raw)
+                end_time = datetime.datetime.fromtimestamp(end_ts)
+            except Exception:
+                if time_hhmm_re.match(str(end_raw)):
+                    end_time = datetime.datetime.fromisoformat(f"{row_date}T{end_raw}")
+                else:
+                    end_time = datetime.datetime.fromisoformat(str(end_raw).replace("Z", "+00:00"))
+        except Exception:
+            try:
+                end_time = datetime.datetime.fromisoformat(f"{row_date}T00:00:00")
+            except Exception:
+                end_time = None
+
+        duration_minutes = None
+        try:
+            if s_dict.get("duration") is not None:
+                duration_minutes = float(s_dict.get("duration"))
+            elif start_time and end_time:
+                duration_minutes = (end_time - start_time).total_seconds() / 60.0
+            else:
+                duration_minutes = 0.0
+        except Exception:
+            duration_minutes = 0.0
+
+        if duration_minutes < 0:
+            duration_minutes = 0.0
 
         total_minutes += duration_minutes
         s_dict["calculated_duration"] = round(duration_minutes)
         calculated_sessions.append(s_dict)
 
-        total_hours = round(total_minutes / 60 , 1)
+    total_hours = round(total_minutes / 60.0, 1)
 
-    
-    start_date = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
-    end_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    
     if sessions:
         first_session_date = datetime.datetime.strptime(sessions[0]["date"], "%Y-%m-%d")
         start_date = first_session_date.strftime("%Y-%m-%d")
@@ -184,18 +223,17 @@ def dashboard():
     else:
         start_date = "N/A"
         end_date = "N/A"
-    
+
     conn.close()
-    
+
     return render_template(
         "dashboard.html",
         start_date=start_date,
         end_date=end_date,
         sessions_count=sessions_count,
         total_hours=total_hours,
-        sessions=calculated_sessions  
+        sessions=calculated_sessions
     )
-
 
 @app.route("/flashcards", methods=["GET", "POST"])
 def flashcards():
@@ -389,12 +427,10 @@ def focusmood():
 def customizedsession():
     if request.method == "POST":
         data = request.get_json()
-
         if not data:
             return jsonify({"error": "No data received"}), 400
-        
-        user_id = session.get("user_id")
 
+        user_id = session.get("user_id")
         if not user_id:
             return jsonify({"error": "User not logged in"}), 401
 
@@ -403,90 +439,105 @@ def customizedsession():
         duration = data.get("duration")
         date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
 
-        db.execute(
-            "INSERT INTO customizedsessiondb (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-            user_id, start_time, end_time, duration, date
-        )
+        conn = sqlite3.connect("studybuddy.db")
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO customizedsessiondb (user_id, start_time, end_time, duration, date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, start_time, end_time, duration, date))
+        conn.commit()
+        conn.close()
+
         return jsonify({"message": "Session saved successfully!"}), 200
-    
+
     return render_template("customizedsession.html")
 
 @app.route('/customizedsession1' , methods=["GET", "POST"])
 def customizedsession1():
         if request.method == "POST":
-            data = request.get_json()
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data received"}), 400
 
-            if not data:
-                return jsonify({"error": "No data received"}), 400
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "User not logged in"}), 401
 
-            user_id = session.get("user_id")
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+        date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
 
-            if not user_id:
-                return jsonify({"error": "User not logged in"}), 401
+        conn = sqlite3.connect("studybuddy.db")
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO customizedsessiondb (user_id, start_time, end_time, duration, date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, start_time, end_time, duration, date))
+        conn.commit()
+        conn.close()
 
-            start_time = data.get("start_time")
-            end_time = data.get("end_time")
-            duration = data.get("duration")
-            date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
+        return jsonify({"message": "Session saved successfully!"}), 200
 
-            db.execute(
-                "INSERT INTO customizedsessiondb (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-                user_id, start_time, end_time, duration, date
-            )
-
-            return jsonify({"message": "Session saved successfully!"}), 200
-       
-        return render_template("customizedsession1.html")
+    return render_template("customizedsession1.html")
 
 @app.route('/customizedsession2' ,methods=["GET", "POST"] )
 def customizedsession2():
         if request.method == "POST":
-            data = request.get_json()
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data received"}), 400
 
-            if not data:
-                return jsonify({"error": "No data received"}), 400
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "User not logged in"}), 401
 
-            user_id = session.get("user_id")
-            if not user_id:
-                return jsonify({"error": "User not logged in"}), 401
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+        date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
 
-            start_time = data.get("start_time")
-            end_time = data.get("end_time")
-            duration = data.get("duration")
-            date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
+        conn = sqlite3.connect("studybuddy.db")
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO customizedsessiondb (user_id, start_time, end_time, duration, date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, start_time, end_time, duration, date))
+        conn.commit()
+        conn.close()
 
-            db.execute(
-                "INSERT INTO customizedsessiondb (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-                user_id, start_time, end_time, duration, date
-            )
+        return jsonify({"message": "Session saved successfully!"}), 200
 
-            return jsonify({"message": "Session saved successfully!"}), 200
-        
-        return render_template("customizedsession2.html")
+    return render_template("customizedsession2.html")
 
 @app.route('/customizedsession3' , methods=["GET", "POST"])
 def customizedsession3():
         if request.method == "POST":
-            data = request.get_json()
-            if not data:
-                return jsonify({"error": "No data received"}), 400
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data received"}), 400
 
-            user_id = session.get("user_id")
-            if not user_id:
-                return jsonify({"error": "User not logged in"}), 401
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "User not logged in"}), 401
 
-            start_time = data.get("start_time")
-            end_time = data.get("end_time")
-            duration = data.get("duration")
-            date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        duration = data.get("duration")
+        date = data.get("date") or datetime.datetime.now().strftime("%Y-%m-%d")
 
-            db.execute(
-                "INSERT INTO customizedsessiondb (user_id, start_time, end_time, duration, date) VALUES (?, ?, ?, ?, ?)",
-                user_id, start_time, end_time, duration, date
-            )
-            return jsonify({"message": "Session saved successfully!"}), 200
-       
-        return render_template("customizedsession3.html")
+        conn = sqlite3.connect("studybuddy.db")
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO customizedsessiondb (user_id, start_time, end_time, duration, date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, start_time, end_time, duration, date))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Session saved successfully!"}), 200
+
+    return render_template("customizedsession3.html")
         
 @app.route('/breaks')
 def breaks():
