@@ -454,7 +454,7 @@ def customizedsession():
 
 @app.route('/customizedsession1' , methods=["GET", "POST"])
 def customizedsession1():
-        if request.method == "POST":
+    if request.method == "POST":
         data = request.get_json()
         if not data:
             return jsonify({"error": "No data received"}), 400
@@ -483,7 +483,7 @@ def customizedsession1():
 
 @app.route('/customizedsession2' ,methods=["GET", "POST"] )
 def customizedsession2():
-        if request.method == "POST":
+    if request.method == "POST":
         data = request.get_json()
         if not data:
             return jsonify({"error": "No data received"}), 400
@@ -512,7 +512,7 @@ def customizedsession2():
 
 @app.route('/customizedsession3' , methods=["GET", "POST"])
 def customizedsession3():
-        if request.method == "POST":
+    if request.method == "POST":
         data = request.get_json()
         if not data:
             return jsonify({"error": "No data received"}), 400
