@@ -6,7 +6,7 @@ import time
 import re
 import datetime
 import sqlite3
-import cs50
+import submit50
 app = Flask(__name__)
 
 app.config["SESSION_PERMANENT"] = False
