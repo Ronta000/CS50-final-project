@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Smartly Customized Session 2
+    Smartly Customized Session
 {% endblock %}
 
 {% block main %}
@@ -28,7 +28,8 @@
   const DEFAULT_MINUTES = 30;
   const DURATION_MS = DEFAULT_MINUTES * 60 * 1000;
   let remainingMs = DURATION_MS;
-  let startTimestamp = null;     
+  let startTimestamp = null;
+  let startISO = null;
   let timerId = null;            
   let running = false;
   let paused = false;
@@ -78,6 +79,7 @@
   function startTimer() {
     if (running) return;
     startTimestamp = Date.now();
+    startISO = new Date(startTimestamp).toISOString();
     running = true;
     paused = false;
     updateTimerUI();
@@ -112,6 +114,7 @@
     running = false;
     paused = false;
     startTimestamp = null;
+    startISO = null;
     timerEl.textContent = fmt(remainingMs);
     startPauseBtn.textContent = 'Start';
     goBtn.style.display = 'none';
@@ -123,6 +126,29 @@
     goBtn.style.display = 'inline-block';
     goBtn.disabled = false;
 
+     try {
+      const endISO = new Date().toISOString();
+      const durationMs = Date.now() - (startTimestamp || Date.now());
+      const durationMinutes = Math.max(1, Math.round(durationMs / 60000)); // at least 1 minute
+
+      const payload = {
+        start_time: startISO || new Date(Date.now() - durationMs).toISOString(),
+        end_time: endISO,
+        duration: durationMinutes,
+        date: new Date().toISOString().slice(0,10)
+      };
+
+      fetch('/customizedsession', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(res => {
+        if (!res.ok) console.warn('Failed to save session', res.status);
+      }).catch(err => console.error('Error saving session', err));
+    } catch(e) {
+      console.error(e);
+    }
+
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
         new Notification('FocusHive', { body: "Time's up! Take a break." });
@@ -131,8 +157,8 @@
       try { alert("Time's up! Take a break."); } catch(e){}
     }
   }
-
-  function playBeep() {
+  
+function playBeep() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const o = ctx.createOscillator();
@@ -153,7 +179,6 @@
     } catch(e) {}
   }
 
-  
   startPauseBtn.addEventListener('click', () => {
     if (!running && !paused) {
       startTimer();
@@ -169,9 +194,8 @@
     restartTimer();
   });
 
-  
   goBtn.addEventListener('click', () => {
-    window.location.href = '/breaks2';
+    window.location.href = '/breaks';
   });
 
   document.addEventListener('visibilitychange', () => {
@@ -185,7 +209,9 @@
   goBtn.disabled = true;
 
   window.FOCUSHIVE_TIMER_READY = true;
+
 })();
+
 </script>
 
 <style>
