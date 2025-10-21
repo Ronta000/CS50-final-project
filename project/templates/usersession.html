@@ -11,7 +11,6 @@
         .list-group-item { display: flex; justify-content: space-between; align-items: center; }
         .session-type-btn.active { background-color: #007bff; color: white; }
         .session-type-btn { width: 120px; }
-        /* center the minutes box */
         .inputs { justify-content: center; }
         .minutes-box { display:flex; flex-direction:column; align-items:center; }
         .minutes-box label { margin-bottom:4px; }
@@ -63,7 +62,6 @@
         let finished = false;
         let isStudySession = true;
 
-        // timestamps in ms
         let actualStartTimestamp = null;
         let endTimestamp = null;
 
@@ -280,7 +278,6 @@
         
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
-                // recalc and update instantly
                 if (endTimestamp) {
                     recalcRemainingFromClock();
                     updateDisplay();
@@ -301,7 +298,6 @@
             }
         });
 
-        // initial state
         readInputs();
         updateSessionTypeButtons();
         toggleSessionButtons(false);
