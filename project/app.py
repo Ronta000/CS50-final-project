@@ -149,7 +149,7 @@ def dashboard():
     sessions = cur.fetchall()
     
     sessions_count = len(sessions)
-    total_minutes = 0
+    total_hours = 0
     calculated_sessions = []
     calculated_sessions = []
     total_minutes = 0
