@@ -150,15 +150,29 @@ def dashboard():
     sessions_count = len(sessions)
     total_minutes = 0
     calculated_sessions = []
+    calculated_sessions = []
+    total_minutes = 0
+
     for s in sessions:
-        start_time = datetime.datetime.fromisoformat(s["start_time"].replace("Z", "+00:00"))
-        end_time = datetime.datetime.fromisoformat(s["end_time"].replace("Z", "+00:00"))
-        duration_minutes = (end_time - start_time).total_seconds() / 60  
+        s_dict = dict(s)
+
+        try:
+            start_time = datetime.datetime.fromisoformat(s_dict["start_time"].replace("Z", "+00:00"))
+            end_time = datetime.datetime.fromisoformat(s_dict["end_time"].replace("Z", "+00:00"))
+        except ValueError:
+            start_time = datetime.datetime.fromtimestamp(float(s_dict["start_time"]))
+            end_time = datetime.datetime.fromtimestamp(float(s_dict["end_time"]))
+
+        duration_minutes = (end_time - start_time).total_seconds() / 60
+        if duration_minutes > 180:
+            duration_minutes = duration_minutes / 60
+
         total_minutes += duration_minutes
-        s["calculated_duration"] = round(duration_minutes)
-        calculated_sessions.append(s)
-    
-    total_hours = round(total_minutes / 60, 4)  
+        s_dict["calculated_duration"] = round(duration_minutes)
+        calculated_sessions.append(s_dict)
+
+        total_hours = round(total_minutes / 60 , 1)
+
     
     start_date = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
     end_date = datetime.datetime.now().strftime("%Y-%m-%d")
