@@ -138,7 +138,7 @@
         date: new Date().toISOString().slice(0,10)
       };
 
-      fetch('/customizedsession', {
+      fetch('/customizedsession2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -195,7 +195,7 @@ function playBeep() {
   });
 
   goBtn.addEventListener('click', () => {
-    window.location.href = '/breaks';
+    window.location.href = '/breaks2';
   });
 
   document.addEventListener('visibilitychange', () => {
