@@ -129,7 +129,7 @@
      try {
       const endISO = new Date().toISOString();
       const durationMs = Date.now() - (startTimestamp || Date.now());
-      const durationMinutes = Math.max(1, Math.round(durationMs / 60000)); // at least 1 minute
+      const durationMinutes = Math.max(1, Math.round(durationMs / 60000)); 
 
       const payload = {
         start_time: startISO || new Date(Date.now() - durationMs).toISOString(),
